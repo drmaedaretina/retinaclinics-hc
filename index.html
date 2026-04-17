@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetinaClinics HC — Sistema Clínico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dk:#1a2540;--dk-b:#1f2d4a;--dk-l:#2d3d5c;
+  --teal:#0bc5ea;--teal-d:#08a8c9;--teal-bg:#e6f7fa;
+  --blue:#3182ce;--blue-l:#ebf8ff;
+  --green:#38a169;--green-l:#f0fff4;
+  --amber:#d69e2e;--amber-l:#fffff0;
+  --red:#e53e3e;--red-l:#fff5f5;
+  --orange:#dd6b20;--purple:#805ad5;--purple-l:#faf5ff;
+  --g50:#f7fafc;--g100:#edf2f7;--g200:#e2e8f0;
+  --g300:#cbd5e0;--g400:#a0aec0;--g500:#718096;
+  --g600:#4a5568;--g700:#2d3748;--g800:#1a202c;
+  --white:#fff;--topH:46px;--sbW:188px;--rpW:210px;
+  --fn:'DM Sans',system-ui,sans-serif;--r:6px}
+html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g700);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* LOGIN */
+#login-overlay{position:fixed;inset:0;background:var(--dk);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.login-box{background:var(--white);border-radius:14px;padding:40px 36px;width:420px;max-width:100%;box-shadow:0 28px 70px rgba(0,0,0,.4)}
+.login-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:26px}
+.login-mark{background:var(--dk);color:var(--teal);font-size:16px;font-weight:800;width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;letter-spacing:-.5px;border:2px solid var(--teal)}
+.login-title{font-size:21px;font-weight:700;color:var(--g800);letter-spacing:-.4px}
+.login-sub{font-size:12px;color:var(--g500);margin-top:3px}
+.login-hint{background:var(--blue-l);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue);margin-bottom:16px;line-height:1.6}
+.login-hint strong{display:block;margin-bottom:2px}
+.login-err{background:var(--red-l);border:1px solid #fed7d7;border-radius:var(--r);padding:9px 12px;font-size:12.5px;color:var(--red);margin-top:10px;display:none}
+
+/* TOP BAR */
+#top-bar{position:fixed;top:0;left:0;right:0;height:var(--topH);background:var(--dk);display:flex;align-items:center;padding:0 16px;z-index:200;border-bottom:1px solid var(--dk-b)}
+.tb-brand{display:flex;align-items:center;gap:9px;padding-right:16px;margin-right:16px;border-right:1px solid var(--dk-b);flex-shrink:0}
+.tb-logo{background:var(--teal);color:var(--dk);font-size:10px;font-weight:800;width:27px;height:27px;border-radius:5px;display:flex;align-items:center;justify-content:center;letter-spacing:-.5px}
+.tb-appname{color:var(--white);font-size:13.5px;font-weight:700;white-space:nowrap;letter-spacing:-.2px}
+.tb-doc{color:var(--g400);font-size:12px;display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap}
+.tb-doc strong{color:var(--white)}
+.tb-date{color:var(--g400);font-size:12px;flex:1;text-align:center;white-space:nowrap}
+.tb-nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+.tb-btn{color:var(--g300);font-size:12.5px;padding:5px 11px;border-radius:4px;border:none;background:transparent;cursor:pointer;font-family:var(--fn);transition:.12s;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.tb-btn:hover,.tb-btn.open{background:var(--dk-b);color:var(--white)}
+.tb-user-pill{display:flex;align-items:center;gap:8px;color:var(--g300);font-size:12.5px;cursor:pointer;padding:4px 10px;border-radius:5px;border-left:1px solid var(--dk-b);margin-left:4px;transition:.12s}
+.tb-user-pill:hover{background:var(--dk-b);color:var(--white)}
+.tb-av{width:27px;height:27px;border-radius:50%;background:var(--teal);color:var(--dk);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;flex-shrink:0}
+
+/* DROPDOWN */
+.dd{position:relative}
+.dd-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1px solid var(--g200);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);min-width:185px;padding:4px 0;z-index:300}
+.dd-menu.open{display:block}
+.dd-item{display:flex;align-items:center;gap:8px;padding:8px 14px;color:var(--g700);font-size:13px;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--fn);transition:.1s}
+.dd-item:hover{background:var(--g50);color:var(--blue)}
+.dd-sep{border:none;border-top:1px solid var(--g100);margin:3px 0}
+.dd-label{padding:6px 14px 2px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--g400)}
+
+/* LAYOUT */
+#app-body{display:flex;padding-top:var(--topH);height:100vh}
+#sidebar{width:var(--sbW);background:var(--dk);flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--dk-b)}
+#main{flex:1;overflow-y:auto;min-width:0}
+
+/* APP SIDEBAR */
+.sb-sep{height:1px;background:var(--dk-b);margin:4px 0}
+.sb-lbl{font-size:9px;font-weight:700;color:#3d5a80;text-transform:uppercase;letter-spacing:1.2px;padding:10px 13px 3px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 13px;border:none;background:transparent;width:100%;text-align:left;cursor:pointer;color:#7a9cc6;font-family:var(--fn);font-size:12.5px;font-weight:500;transition:.12s;border-left:3px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,.06);color:#c0d4ec}
+.sb-item.active{background:rgba(11,197,234,.1);color:var(--teal);border-left-color:var(--teal)}
+.sb-ico{width:17px;text-align:center;font-size:13px;flex-shrink:0}
+/* PATIENT SIDEBAR */
+.ps-header{padding:12px 13px;border-bottom:1px solid var(--dk-b)}
+.ps-label{font-size:9px;color:#3d5a80;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.ps-name{color:var(--white);font-size:13px;font-weight:700;line-height:1.3}
+.ps-ci{color:var(--g500);font-size:11px;margin-top:2px}
+.ps-item{display:flex;align-items:center;gap:9px;padding:7px 13px;border:none;background:transparent;width:100%;text-align:left;cursor:pointer;color:#7a9cc6;font-family:var(--fn);font-size:12.5px;font-weight:500;transition:.12s;border-left:3px solid transparent}
+.ps-item:hover{background:rgba(255,255,255,.06);color:#c0d4ec}
+.ps-item.active{background:rgba(11,197,234,.1);color:var(--teal);border-left-color:var(--teal)}
+
+/* PAGE HEADER */
+.ph{background:var(--white);padding:13px 22px;border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.ph-title{font-size:16px;font-weight:700;letter-spacing:-.3px;color:var(--g800)}
+.ph-sub{font-size:11.5px;color:var(--g500);margin-top:1px}
+.ph-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.ca{padding:16px 22px}
+
+/* HC LAYOUT */
+.hc-wrap{display:flex;min-height:calc(100vh - var(--topH));background:var(--g100)}
+.hc-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--g50)}
+.hc-right{width:var(--rpW);flex-shrink:0;background:var(--white);border-left:1px solid var(--g200);overflow-y:auto}
+
+/* PATIENT HEADER */
+.pat-hdr{background:var(--dk);color:var(--white);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pat-hdr-name{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.pat-hdr-bread{font-size:11.5px;color:var(--g400)}
+.pat-hdr-bread span{color:var(--teal);cursor:pointer;transition:.1s}
+.pat-hdr-bread span:hover{text-decoration:underline}
+.pat-hdr-actions{display:flex;gap:7px;align-items:center}
+
+/* ENCOUNTER NAV */
+.enc-nav{background:var(--white);border-bottom:1px solid var(--g200);padding:7px 14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.enc-nav-btn{padding:4px 8px;border:1px solid var(--g300);background:var(--white);border-radius:4px;cursor:pointer;font-size:13px;color:var(--g600);transition:.12s;font-family:var(--fn)}
+.enc-nav-btn:hover{background:var(--g100)}
+.enc-nav-btn.teal{background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:600}
+.enc-nav-btn.teal:hover{background:var(--teal-d)}
+.enc-date{padding:4px 11px;border:1px solid var(--g300);border-radius:4px;background:var(--white);font-size:12.5px;font-weight:600;min-width:130px;text-align:center;color:var(--g700)}
+.enc-counter{font-size:11.5px;color:var(--g400)}
+
+/* HC TABS */
+.hc-tabbar{background:var(--dk);display:flex;padding:0 14px;gap:1px;border-bottom:2px solid var(--teal);overflow-x:auto;flex-shrink:0}
+.hc-tab{padding:8px 13px 9px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.05);color:var(--g400);font-family:var(--fn);transition:.12s;border-radius:4px 4px 0 0;white-space:nowrap;flex-shrink:0}
+.hc-tab:hover{background:rgba(255,255,255,.1);color:var(--white)}
+.hc-tab.active{background:var(--white);color:var(--dk);font-weight:700}
+
+/* HC SECTION CARD */
+.hc-sec{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);margin:12px 14px;overflow:hidden}
+.hc-sec-hdr{background:var(--dk);color:var(--white);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:700}
+.hc-sec-hdr .ico{background:rgba(11,197,234,.18);color:var(--teal);width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11.5px}
+.hc-sec-body{padding:13px}
+
+/* OPTOMETRY TABLE */
+.opto-wrap{overflow-x:auto;margin-bottom:12px}
+.opto-t{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}
+.opto-t th{padding:5px 6px;text-align:center;background:var(--dk);color:var(--white);font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.opto-t td{padding:3px 4px;text-align:center;vertical-align:middle}
+.opto-t tr:nth-child(even) td{background:var(--g50)}
+.opto-eye{font-weight:700;background:var(--dk)!important;color:var(--teal);font-size:10.5px;padding:5px 8px;text-align:left!important;white-space:nowrap}
+.opto-in{width:100%;padding:3px 4px;border:1px solid var(--g200);border-radius:3px;font-size:12px;text-align:center;font-family:var(--fn);outline:none;min-width:50px;background:var(--white)}
+.opto-in:focus{border-color:var(--teal)}
+.opto-lbl{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+/* IOP ROWS */
+.pio-grid{display:grid;grid-template-columns:120px 75px 55px 55px 75px 75px 30px;gap:5px;align-items:center;margin-bottom:5px}
+.pio-hdr{font-size:10.5px;font-weight:700;text-align:center;color:var(--g500);text-transform:uppercase;letter-spacing:.4px}
+
+/* DX ROWS */
+.dx-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--g200);border-radius:5px;margin-bottom:6px;background:var(--white);transition:.1s}
+.dx-row:hover{background:var(--g50)}
+
+/* ENTITY SELECT (dynamic diagnoses) */
+.ent-row{display:flex;gap:6px;align-items:flex-start}
+.ent-row .fs{flex:1}
+.ent-add{display:none;gap:6px;align-items:center;margin-top:5px;padding:8px 10px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:5px}
+.ent-add .fi{flex:1}
+
+/* RIGHT PANEL */
+.rp-top{background:var(--dk);color:var(--white);padding:13px 14px;text-align:center;border-bottom:1px solid var(--dk-b)}
+.rp-age{font-size:22px;font-weight:700;color:var(--teal)}
+.rp-type{font-size:10px;color:var(--g500);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:2px}
+.rp-lbl{font-size:9.5px;color:var(--g400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:8px 13px 3px}
+.rp-link{display:flex;align-items:center;gap:7px;padding:6px 13px;cursor:pointer;color:var(--g600);font-size:12.5px;border:none;background:transparent;width:100%;text-align:left;font-family:var(--fn);transition:.1s}
+.rp-link:hover{background:var(--g50);color:var(--blue)}
+.rp-link.current{color:var(--teal);font-weight:600}
+.rp-sep{border:none;border-top:1px solid var(--g100);margin:3px 0}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r)}
+.card.pad{padding:16px 18px}.card.p0{padding:0}
+.card-hdr{padding:12px 15px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
+.card-hdr-t{font-size:13px;font-weight:700}
+
+/* FORMS */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:11.5px;font-weight:700;color:var(--g500);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.req{color:var(--red)}.fhint{font-size:11px;color:var(--g400);margin-top:3px}
+.fi,.fs,.ft{width:100%;padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--fn);font-size:13.5px;color:var(--g700);background:var(--white);outline:none;transition:.15s}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(11,197,234,.1)}
+.ft{resize:vertical;min-height:65px}
+.fi-sm{padding:5px 8px;font-size:12.5px}
+.fi-sm{padding:5px 8px;font-size:12.5px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.form-sec{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--g500);padding-bottom:8px;border-bottom:1px solid var(--g200);margin-bottom:12px}
+.form-val{padding:7px 10px;background:var(--g50);border:1.5px solid var(--g200);border-radius:var(--r);font-size:13.5px;font-weight:600}
+.form-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--g200)}
+.form-err{background:var(--red-l);border:1px solid #fed7d7;border-radius:var(--r);padding:9px 13px;font-size:12.5px;color:var(--red);margin-top:10px}
+.form-err div{padding:1px 0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);font-family:var(--fn);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.12s;white-space:nowrap}
+.btn-primary{background:var(--blue);color:var(--white)}.btn-primary:hover{background:#2b6cb0}
+.btn-teal{background:var(--teal);color:var(--white)}.btn-teal:hover{background:var(--teal-d)}
+.btn-dark{background:var(--dk);color:var(--white)}.btn-dark:hover{background:var(--dk-l)}
+.btn-ghost{background:transparent;color:var(--g600);border:1px solid var(--g300)}.btn-ghost:hover{background:var(--g100)}
+.btn-danger{background:var(--red);color:var(--white)}.btn-danger:hover{background:#c53030}
+.btn-sm{padding:5px 11px;font-size:12px}.btn-xs{padding:3px 8px;font-size:11.5px}
+.btn-full{width:100%;justify-content:center}
+.btn-link{background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;font-weight:600;font-family:var(--fn)}
+.btn-link:hover{text-decoration:underline}
+.btn-icon{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:4px;font-size:14px;opacity:.65;transition:.12s}
+.btn-icon:hover{opacity:1;background:var(--g100)}
+
+/* BADGES & MISC */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.b-blue{background:var(--blue-l);color:var(--blue)}.b-teal{background:var(--teal-bg);color:var(--teal-d)}
+.b-green{background:var(--green-l);color:var(--green)}.b-amber{background:var(--amber-l);color:var(--amber)}
+.b-red{background:var(--red-l);color:var(--red)}.b-gray{background:var(--g100);color:var(--g500)}
+.b-purple{background:var(--purple-l);color:var(--purple)}.b-orange{background:#fff8f0;color:var(--orange)}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{padding:8px 12px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g500);background:var(--g50);border-bottom:1px solid var(--g200)}
+.data-table td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--g100);vertical-align:middle}
+.data-table tbody tr:hover td{background:var(--g50)}
+.search-wrap{position:relative}
+.search-in{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--fn);font-size:13px;background:var(--white);outline:none;transition:.15s}
+.search-in:focus{border-color:var(--teal)}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--g400);font-size:15px;pointer-events:none}
+.pat-cell{display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));color:var(--white);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.kpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.kpi-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:13px 15px;border-top:3px solid}
+.kpi-card.blue{border-top-color:var(--blue)}.kpi-card.teal{border-top-color:var(--teal)}
+.kpi-card.green{border-top-color:var(--green)}.kpi-card.amber{border-top-color:var(--amber)}
+.kpi-card.red{border-top-color:var(--red)}.kpi-card.gray{border-top-color:var(--g400)}
+.kv{font-size:24px;font-weight:700;line-height:1}.kl{font-size:10.5px;color:var(--g500);margin-top:3px}
+.info-list{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:13px}
+.info-list dt{color:var(--g400);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.alert{padding:10px 13px;border-radius:var(--r);font-size:12.5px;margin-bottom:12px;line-height:1.5}
+.alert-info{background:var(--blue-l);border:1px solid #bee3f8;color:var(--blue)}
+.alert-teal{background:var(--teal-bg);border:1px solid #b2ebf2;color:var(--teal-d)}
+.sh{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.sh-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g500);white-space:nowrap}
+.sh-d{flex:1;height:1px;background:var(--g200)}
+.empty{text-align:center;padding:44px 20px}
+.empty-ico{font-size:36px;margin-bottom:9px}.empty-t{font-size:14px;font-weight:700;color:var(--g700);margin-bottom:4px}.empty-s{font-size:12.5px;color:var(--g400);margin-bottom:14px}
+.empty-mini{padding:16px;text-align:center;color:var(--g400);font-size:12.5px}
+.fw7{font-weight:700}.txt2{color:var(--g500)}.txt-m{color:var(--g400)}.txt-sm{font-size:12px}
+.mb10{margin-bottom:10px}.mb14{margin-bottom:14px}.mb18{margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.seg-badge{background:var(--purple-l);color:var(--purple);display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:20px;font-size:10.5px;font-weight:700}
+.stat-row{display:flex;gap:14px;flex-wrap:wrap}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 14px;background:var(--g50);border-radius:var(--r);border:1px solid var(--g200);min-width:76px}
+.stat-val{font-size:18px;font-weight:700;color:var(--g800)}.stat-lbl{font-size:10.5px;color:var(--g500);text-align:center}
+.role-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+.role-admin{background:var(--red-l);color:var(--red)}.role-doctor{background:var(--blue-l);color:var(--blue)}
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{padding:11px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.16);max-width:330px;pointer-events:auto;transition:opacity .4s,transform .4s}
+.t-success{background:#276749;color:#fff}.t-error{background:#9b2c2c;color:#fff}.t-warn{background:#975a16;color:#fff}
+.toast-out{opacity:0;transform:translateY(8px)}
+/* PROC GRID (multi-procedure surgery) */
+.proc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.proc-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--g200);border-radius:5px;cursor:pointer;font-size:13px;transition:.12s;background:var(--white)}
+.proc-item:hover{border-color:var(--teal);background:var(--teal-bg)}
+.proc-item.sel{border-color:var(--teal);background:var(--teal-bg)}
+.proc-item input{width:14px;height:14px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+/* CHECKLIST */
+.cl-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:5px;cursor:pointer;font-size:12.5px;transition:.1s}
+.cl-item:hover{background:var(--g50)}.cl-item input{width:14px;height:14px;accent-color:var(--green);cursor:pointer}
+.cl-status{padding:8px 12px;border-radius:var(--r);font-size:12.5px;font-weight:700;text-align:center;margin-bottom:10px}
+.cl-status.ready{background:var(--green-l);color:var(--green)}.cl-status.pending{background:var(--amber-l);color:var(--amber)}
+/* FILTER TABS */
+.ftabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.ftab{padding:5px 12px;border-radius:20px;border:1.5px solid var(--g200);background:var(--white);font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--g500)}
+.ftab:hover{border-color:var(--teal);color:var(--teal)}.ftab.active{background:var(--dk);border-color:var(--dk);color:var(--white)}
+.ftab-n{display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);border-radius:10px;padding:0 5px;font-size:10px;margin-left:3px;min-width:16px}
+.ftab:not(.active) .ftab-n{background:var(--g100);color:var(--g400)}
+/* ── DASHBOARD ──────────────────────────────── */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.dash-kpi{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:15px 17px;position:relative;overflow:hidden}
+.dash-kpi::after{content:'';position:absolute;bottom:-12px;right:-12px;width:64px;height:64px;border-radius:50%;opacity:.08}
+.dash-kpi.blue::after{background:var(--blue)}.dash-kpi.teal::after{background:var(--teal)}
+.dash-kpi.green::after{background:var(--green)}.dash-kpi.amber::after{background:var(--amber)}
+.dash-kpi.red::after{background:var(--red)}.dash-kpi.purple::after{background:var(--purple)}
+.dash-kpi-ico{font-size:20px;margin-bottom:8px;display:block}
+.dash-kpi-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g500);margin-bottom:2px}
+.dash-kpi-val{font-size:28px;font-weight:700;line-height:1;color:var(--g800);margin-bottom:3px}
+.dash-kpi-sub{font-size:11.5px;color:var(--g400)}
+.dash-kpi-trend{font-size:11px;font-weight:700;margin-top:4px}
+.trend-up{color:var(--green)}.trend-down{color:var(--red)}.trend-flat{color:var(--g400)}
+.dash-kpi-bar{height:3px;border-radius:2px;margin-top:10px;background:var(--g100)}
+.dash-kpi-bar-fill{height:100%;border-radius:2px}
+.dash-kpi.blue .dash-kpi-bar-fill{background:var(--blue)}
+.dash-kpi.teal .dash-kpi-bar-fill{background:var(--teal)}
+.dash-kpi.green .dash-kpi-bar-fill{background:var(--green)}
+.dash-kpi.amber .dash-kpi-bar-fill{background:var(--amber)}
+.dash-kpi.purple .dash-kpi-bar-fill{background:var(--purple)}
+/* Chart cards */
+.chart-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:16px 18px}
+.chart-card-title{font-size:13px;font-weight:700;color:var(--g800);margin-bottom:3px}
+.chart-card-sub{font-size:11.5px;color:var(--g400);margin-bottom:14px}
+.chart-wrap{position:relative}
+/* Period selector */
+.period-tabs{display:flex;gap:4px;margin-bottom:16px}
+.period-tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--g200);background:var(--white);font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer;transition:.12s;color:var(--g500)}
+.period-tab:hover{border-color:var(--teal);color:var(--teal)}
+.period-tab.active{background:var(--dk);border-color:var(--dk);color:var(--white)}
+/* Mini horizontal bar */
+.mini-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.mini-bar-label{font-size:12px;color:var(--g600);min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-bar-track{width:120px;flex-shrink:0;background:var(--g100);border-radius:3px;height:10px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:3px}
+.mini-bar-num{font-size:11.5px;font-weight:700;color:var(--g700);min-width:24px;text-align:right;flex-shrink:0}
+/* Activity feed */
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--g100)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-dot.inj{background:var(--blue)}.activity-dot.sx{background:var(--teal)}
+.activity-dot.cita{background:var(--green)}.activity-dot.pac{background:var(--purple)}
+.activity-content{flex:1;min-width:0}
+.activity-title{font-size:12.5px;font-weight:600;color:var(--g700)}
+.activity-meta{font-size:11.5px;color:var(--g400);margin-top:1px}
+/* Status distribution */
+.status-dist-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-dist-label{font-size:12.5px;color:var(--g600);flex:1}
+.status-dist-val{font-size:12.5px;font-weight:700;color:var(--g700)}
+#print-area{display:none}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:white!important;margin:0;padding:0}
+  #app,#login-overlay,#toasts{display:none!important}
+  #print-area{display:block!important}
+  @page{size:A4;margin:14mm 16mm 16mm 16mm}
+  .no-print{display:none!important}
+}
+/* Print document base */
+.print-doc{font-family:'DM Sans',Arial,sans-serif;color:#1a202c;font-size:11.5px;line-height:1.5;background:#fff}
+/* Header */
+.p-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:10px;margin-bottom:14px;border-bottom:3px solid #1a2540}
+.p-hdr-left{display:flex;align-items:center;gap:12px}
+.p-logo{background:#1a2540;color:#0bc5ea;font-size:13px;font-weight:900;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;letter-spacing:-.5px;flex-shrink:0}
+.p-clinic{font-size:16px;font-weight:800;color:#1a2540;letter-spacing:-.3px}
+.p-spec{font-size:11px;color:#718096;margin-top:2px}
+.p-hdr-right{text-align:right;font-size:11px;color:#718096}
+.p-hdr-right strong{display:block;font-size:13px;color:#1a2540;margin-bottom:2px}
+/* Patient banner */
+.p-pat-banner{background:#1a2540;color:#fff;padding:10px 14px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.p-pat-name{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.p-pat-meta{font-size:11px;color:#94a3b8;margin-top:2px}
+.p-pat-right{text-align:right;font-size:11px;color:#94a3b8}
+.p-pat-right strong{display:block;font-size:14px;color:#0bc5ea;font-weight:800}
+/* Sections */
+.p-section{margin-bottom:12px}
+.p-section-title{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0369a1;border-bottom:1.5px solid #dbeafe;padding-bottom:4px;margin-bottom:8px}
+/* Two column */
+.p-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.p-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+/* Info rows */
+.p-row{display:flex;margin-bottom:4px;font-size:11px}
+.p-row-label{color:#718096;font-weight:700;min-width:110px;flex-shrink:0;text-transform:uppercase;font-size:9.5px;letter-spacing:.3px;padding-top:1px}
+.p-row-val{color:#1a202c;flex:1}
+/* Tables */
+.p-table{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:10px}
+.p-table th{background:#1a2540;color:#fff;padding:5px 8px;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:.3px}
+.p-table td{padding:4px 8px;text-align:center;border:1px solid #e2e8f0;vertical-align:middle}
+.p-table tr:nth-child(even) td{background:#f7fafc}
+.p-table .eye-lbl{background:#1a2540;color:#0bc5ea;font-weight:700;text-align:left!important;padding:5px 8px;font-size:9.5px}
+/* KPI strip */
+.p-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.p-kpi{border:1.5px solid #e2e8f0;border-radius:5px;padding:8px 10px;text-align:center;border-top:3px solid #0369a1}
+.p-kpi .v{font-size:22px;font-weight:800;color:#1a2540;line-height:1}
+.p-kpi .l{font-size:9px;color:#718096;margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+/* Diagnoses */
+.p-dx{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:4px}
+.p-dx-pill{background:#ebf8ff;color:#2b6cb0;padding:2px 8px;border-radius:20px;font-size:9.5px;font-weight:700}
+/* Textbox */
+.p-textbox{border:1px solid #e2e8f0;border-radius:4px;padding:7px 10px;min-height:36px;font-size:11px;line-height:1.5;white-space:pre-wrap;color:#1a202c;margin-bottom:8px}
+.p-textbox.empty{color:#a0aec0;font-style:italic}
+/* Checklist */
+.p-cl{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.p-cl-item{display:flex;align-items:center;gap:6px;font-size:10.5px}
+.p-cl-box{width:13px;height:13px;border:1.5px solid #718096;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px}
+.p-cl-box.checked{background:#1a2540;border-color:#1a2540;color:#0bc5ea}
+/* Signature area */
+.p-sig{margin-top:20px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end}
+.p-sig-box{text-align:center;min-width:200px}
+.p-sig-line{border-bottom:1px solid #1a202c;height:36px;margin-bottom:5px}
+.p-sig-name{font-size:11.5px;font-weight:700;color:#1a202c}
+.p-sig-spec{font-size:10px;color:#718096}
+/* Footer */
+.p-foot{display:flex;justify-content:space-between;font-size:9px;color:#a0aec0;padding-top:8px;border-top:1px solid #e2e8f0;margin-top:10px}
+/* Ant sys checkboxes row */
+.p-ant-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.p-ant-item{display:flex;align-items:center;gap:5px;font-size:10px}
+/* Monthly report */
+.p-month-bar{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.p-month-bar .lbl{font-size:10px;color:#718096;width:28px;text-align:right}
+.p-month-bar .bar-wrap{flex:1;background:#f1f5f9;border-radius:2px;height:12px;overflow:hidden}
+.p-month-bar .bar-fill{height:100%;background:#0369a1;border-radius:2px}
+.p-month-bar .num{font-size:10px;font-weight:700;width:20px}
+.agenda-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--g200);padding:0 22px;flex-shrink:0}
+.agenda-tab{padding:10px 16px 11px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:var(--fn);color:var(--g400);border-bottom:3px solid transparent;transition:.12s}
+.agenda-tab:hover{color:var(--g700)}
+.agenda-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.agenda-tab-n{display:inline-flex;align-items:center;justify-content:center;background:var(--red-l);color:var(--red);border-radius:10px;padding:0 6px;font-size:10px;font-weight:700;margin-left:5px;min-width:18px}
+.agenda-tab-n.ok{background:var(--green-l);color:var(--green)}
+.agenda-tab-n.warn{background:var(--amber-l);color:var(--amber)}
+/* Appointment card */
+.cita-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.12s;border-left:4px solid var(--g300)}
+.cita-card:hover{border-color:var(--g300);background:var(--g50)}
+.cita-card.urgente{border-left-color:var(--red)}
+.cita-card.hoy{border-left-color:var(--teal)}
+.cita-card.programada{border-left-color:var(--blue)}
+.cita-card.pendiente{border-left-color:var(--purple)}
+.cita-time{font-size:15px;font-weight:700;color:var(--dk);min-width:50px;text-align:center}
+.cita-time .ampm{font-size:10px;color:var(--g400);display:block;font-weight:400}
+.cita-info{flex:1;min-width:0}
+.cita-name{font-size:13.5px;font-weight:700;color:var(--g800)}
+.cita-meta{font-size:12px;color:var(--g500);margin-top:2px}
+.cita-actions{display:flex;gap:5px;align-items:center;flex-shrink:0}
+/* Notification badge in top bar */
+.notif-badge{position:relative;display:inline-flex}
+.notif-dot{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:var(--red);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--dk)}
+/* Day header */
+.day-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.day-circle{width:46px;height:46px;border-radius:50%;background:var(--teal);color:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.day-num{font-size:18px;font-weight:700;line-height:1}
+.day-mon{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.day-info{flex:1}
+.day-title{font-size:15px;font-weight:700;color:var(--g800)}
+.day-sub{font-size:12px;color:var(--g500);margin-top:1px}
+/* Follow-up urgency row */
+.fu-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);margin-bottom:6px;cursor:pointer;transition:.12s}
+.fu-row:hover{opacity:.85}
+.fu-row.muy-atrasado{background:#fef2f2;border:1px solid #fecaca}
+.fu-row.atrasado{background:var(--amber-l);border:1px solid #fde68a}
+.fu-row.esta-semana{background:#fff8f0;border:1px solid #fed7aa}
+.fu-row.proximo{background:var(--blue-l);border:1px solid #bfdbfe}
+.fu-days{font-size:20px;font-weight:700;min-width:44px;text-align:center;flex-shrink:0}
+.fu-name{font-size:13.5px;font-weight:700;flex:1}
+.fu-meta{font-size:11.5px;color:var(--g500);margin-top:1px}
+/* Quick new cita form */
+.cita-form-inline{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);padding:14px;margin-bottom:12px}
+/* Pendiente banner in HC */
+.pendiente-banner{background:var(--purple-l);border:1px solid #c4b5fd;border-radius:var(--r);padding:9px 14px;display:flex;align-items:center;gap:10px;margin:0 0 0 0}
+/* Alert blocks */
+.alert-block{border-radius:var(--r);padding:11px 14px;margin-bottom:10px;border-left:4px solid}
+.alert-block.red{background:#fef2f2;border-left-color:var(--red)}
+.alert-block.amber{background:var(--amber-l);border-left-color:var(--amber)}
+.alert-block.blue{background:var(--blue-l);border-left-color:var(--blue)}
+.alert-block.green{background:var(--green-l);border-left-color:var(--green)}
+.alert-block.purple{background:var(--purple-l);border-left-color:var(--purple)}
+.sx-programada{background:var(--blue-l);color:var(--blue)}
+.sx-pendiente_economico{background:var(--amber-l);color:var(--amber)}
+.sx-realizada{background:var(--green-l);color:var(--green)}
+.sx-cancelada{background:var(--g100);color:var(--g500)}
+/* QX CARD in HC tab */
+.sx-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
+.sx-card:hover{border-color:var(--g300)}
+@media print{body{background:white}#app,#login-overlay{display:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-mark">RC</div>
+      <div class="login-title">RetinaClinics HC</div>
+      <div class="login-sub">Historia Clínica Electrónica · Retina &amp; Vítreo</div>
+    </div>
+    <div class="login-hint"><strong>Cuentas de demo:</strong>Admin: admin@retinaclinics.com / admin123<br>Doctor: doctor@retinaclinics.com / demo123</div>
+    <div class="fg"><label class="fl">Correo Electrónico</label><input class="fi" type="email" id="login-email" placeholder="correo@clinica.com" autocomplete="email"></div>
+    <div class="fg"><label class="fl">Contraseña</label><input class="fi" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-teal btn-full" style="margin-top:4px;padding:10px" onclick="doLogin()" id="login-btn">Ingresar al Sistema</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="top-bar">
+    <div class="tb-brand"><div class="tb-logo">RC</div><span class="tb-appname">RetinaClinics HC</span></div>
+    <div class="tb-doc"><strong id="tb-name">—</strong><span id="tb-spec" style="color:var(--g500)">—</span></div>
+    <div class="tb-date" id="tb-date">—</div>
+    <div class="tb-nav">
+      <div class="dd">
+        <button class="tb-btn" onclick="toggleDD(this)">👤 Paciente ▾</button>
+        <div class="dd-menu">
+          <button class="dd-item" onclick="nav('patients');closeAllDD()">🔍 Buscar Paciente</button>
+          <button class="dd-item" onclick="nav('patient-form',{eid:null});closeAllDD()">➕ Nuevo Paciente</button>
+          <div class="dd-sep"></div>
+          <button class="dd-item" onclick="nav('injections');closeAllDD()">💉 Inyecciones</button>
+          <button class="dd-item" onclick="nav('surgeries');closeAllDD()">🔬 Cirugías</button>
+          <button class="dd-item" onclick="nav('sx-followup');closeAllDD()">🏥 Seguimiento Qx</button>
+          <div class="dd-sep"></div>
+          <button class="dd-item" onclick="nav('agenda',{agendaTab:'pendientes'});closeAllDD()">⚑ Mostrar Pendientes</button>
+        </div>
+      </div>
+      <!-- NOTIF BADGE -->
+      <div class="notif-badge" id="notif-wrap" style="cursor:pointer" onclick="nav('agenda',{agendaTab:'seguimiento'})">
+        <button class="tb-btn">📅 Agenda</button>
+        <span class="notif-dot" id="notif-dot" style="display:none">0</span>
+      </div>
+      <div class="dd" id="admin-dd" style="display:none">
+        <button class="tb-btn" onclick="toggleDD(this)">⚙ Admin ▾</button>
+        <div class="dd-menu">
+          <button class="dd-item" onclick="nav('admin');closeAllDD()">👑 Panel Admin</button>
+          <button class="dd-item" onclick="nav('settings');closeAllDD()">🔧 Configuración</button>
+        </div>
+      </div>
+      <!-- Informes / Print dropdown -->
+      <div class="dd">
+        <button class="tb-btn" onclick="toggleDD(this)">📋 Informes ▾</button>
+        <div class="dd-menu">
+          <div class="dd-label">Reportes</div>
+          <button class="dd-item" onclick="nav('dashboard');closeAllDD()">📊 Dashboard</button>
+          <div class="dd-sep"></div>
+          <button class="dd-item" onclick="printReport('mes');closeAllDD()">🖨 Reporte Mensual</button>
+          <button class="dd-item" onclick="printReport('anio');closeAllDD()">🖨 Reporte Anual</button>
+        </div>
+      </div>
+      <div class="dd">
+        <div class="tb-user-pill" onclick="toggleDD(this)">
+          <div class="tb-av" id="tb-av">—</div><span id="tb-uname">—</span> ▾
+        </div>
+        <div class="dd-menu">
+          <div class="dd-label" id="tb-role-label">—</div>
+          <button class="dd-item" onclick="nav('settings');closeAllDD()">⚙ Mi Perfil</button>
+          <div class="dd-sep"></div>
+          <button class="dd-item" style="color:var(--red)" onclick="logout()">↩ Cerrar Sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="app-body">
+    <aside id="sidebar"><div id="sb-inner"></div></aside>
+    <main id="main"><div id="view"></div></main>
+  </div>
+</div>
+<div id="print-area"></div>
+<div id="toasts"></div>
+
+<script>
+// ══════════════ UTILS ══════════════
+const pad=n=>String(n).padStart(2,'0');
+const genId=()=>Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+const today=()=>{const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+const nowT=()=>{const d=new Date();return`${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtD=ds=>{if(!ds)return'—';const[y,m,d]=ds.split('-');return`${d}/${m}/${y}`;};
+const calcAge=bd=>{if(!bd)return null;const[y,m,d]=bd.split('-').map(Number),t=new Date();let a=t.getFullYear()-y;if(t.getMonth()+1<m||(t.getMonth()+1===m&&t.getDate()<d))a--;return a;};
+const addDays=(ds,n)=>{const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d+n);return`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;};
+const diffDays=(a,b)=>{const[y1,m1,d1]=a.split('-').map(Number),[y2,m2,d2]=b.split('-').map(Number);return Math.round((new Date(y2,m2-1,d2)-new Date(y1,m1-1,d1))/86400000);};
+const DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MNAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const fmtDateLong=()=>{const d=new Date();return`${DAYS[d.getDay()]}, ${d.getDate()} de ${MNAMES[d.getMonth()]} de ${d.getFullYear()}`;};
+
+// ══════════════ STORAGE ══════════════
+const _M={};
+const sGet=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return _M[k]||null;}};
+const sSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{_M[k]=v;}};
+
+// ══════════════ AUTH ══════════════
+// ── Hash pura JS (sin crypto.subtle — funciona en file://, HTTP y HTTPS) ──
+function hashPwd(pwd){
+  // cyrb53 × 4 rondas → 64 chars hex, determinista, sin APIs externas
+  const str = pwd + ':rc_salt_v3_2024';
+  let out = '';
+  for(let r = 0; r < 4; r++){
+    let h1 = 0xdeadbeef ^ r, h2 = 0x41c6ce57 ^ r;
+    for(let i = 0; i < str.length; i++){
+      const c = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 2654435761);
+      h2 = Math.imul(h2 ^ c, 1597334677);
+    }
+    h1 = Math.imul(h1^(h1>>>16), 2246822507) ^ Math.imul(h2^(h2>>>13), 3266489909);
+    h2 = Math.imul(h2^(h2>>>16), 2246822507) ^ Math.imul(h1^(h1>>>13), 3266489909);
+    out += (4294967296*(2097151&h2)+(h1>>>0)).toString(16).padStart(16,'0');
+  }
+  return out;
+}
+let SESSION={uid:null,org_id:null,role:null,name:'',initials:'',spec:'',clinic:''};
+const getAllUsers=()=>sGet('rc_users')||[];
+const getUser=uid=>(sGet('rc_users')||[]).find(u=>u.id===uid)||null;
+const getUserByEmail=em=>(sGet('rc_users')||[]).find(u=>u.email.toLowerCase()===em.toLowerCase().trim())||null;
+const saveUser=u=>{const a=getAllUsers(),i=a.findIndex(x=>x.id===u.id);i>=0?a[i]=u:a.push(u);sSet('rc_users',a);return u;};
+const deleteUser=uid=>sSet('rc_users',getAllUsers().filter(u=>u.id!==uid));
+const getAllOrgs=()=>sGet('rc_orgs')||[];
+const saveOrg=o=>{const a=getAllOrgs(),i=a.findIndex(x=>x.id===o.id);i>=0?a[i]=o:a.push(o);sSet('rc_orgs',a);return o;};
+function setSession(u){SESSION={uid:u.id,org_id:u.org_id,role:u.role,name:u.name,initials:u.initials||u.name.substring(0,2).toUpperCase(),spec:u.spec||'',clinic:u.clinic||''};sSet('rc_session',SESSION);}
+function loadSession(){const s=sGet('rc_session');if(s&&s.uid&&getUser(s.uid)){SESSION=s;return true;}return false;}
+function logout(){sSet('rc_session',null);SESSION={uid:null};location.reload();}
+const MY_DID=()=>SESSION.uid;
+const MY_ORG=()=>SESSION.org_id;
+
+// ══════════════ DYNAMIC CATALOGS ══════════════
+const getDiags=()=>(sGet('rc_diags')||[]).filter(d=>d.did===MY_DID()).sort((a,b)=>a.name.localeCompare(b.name));
+const addDiag=name=>{const e={id:genId(),name:name.trim(),did:MY_DID(),org_id:MY_ORG(),createdAt:today()};const a=sGet('rc_diags')||[];a.push(e);sSet('rc_diags',a);return e;};
+const delDiag=id=>sSet('rc_diags',(sGet('rc_diags')||[]).filter(d=>d.id!==id));
+
+function showEntAdd(t){const r=document.getElementById(`ea-${t}`);if(r){r.style.display='flex';document.getElementById(`ea-${t}-val`).focus();}}
+function cancelEntAdd(t){const r=document.getElementById(`ea-${t}`);if(r){r.style.display='none';const i=document.getElementById(`ea-${t}-val`);if(i)i.value='';}}
+function confirmEntAdd(t,sid){
+  const inp=document.getElementById(`ea-${t}-val`);const name=(inp?.value||'').trim();
+  if(!name){toast('⚠ Ingrese un nombre.','warn');return;}
+  if(getDiags().find(x=>x.name.toLowerCase()===name.toLowerCase())){toast(`"${name}" ya existe.`,'warn');return;}
+  const e=addDiag(name);
+  const sel=document.getElementById(sid);
+  if(sel){const opt=new Option(e.name,e.name,true,true);sel.add(opt);sel.value=e.name;}
+  cancelEntAdd(t);toast(`✅ "${name}" agregado.`,'success');
+}
+const diagSel=(val='',sid='sd',aid='d')=>`
+  <div class="ent-row"><select class="fs" id="${sid}" name="diag">
+    <option value="">— Sin especificar —</option>
+    ${getDiags().map(d=>`<option value="${esc(d.name)}" ${val===d.name?'selected':''}>${esc(d.name)}</option>`).join('')}
+  </select><button type="button" class="btn btn-ghost btn-sm" onclick="showEntAdd('${aid}')">+ Nuevo</button></div>
+  <div class="ent-add" id="ea-${aid}">
+    <input class="fi fi-sm" id="ea-${aid}-val" placeholder="Nuevo diagnóstico…" style="flex:1">
+    <button type="button" class="btn btn-teal btn-sm" onclick="confirmEntAdd('${aid}','${sid}')">✓</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="cancelEntAdd('${aid}')">✕</button>
+  </div>`;
+
+// ══════════════ DATABASE ══════════════
+const DB={
+  pAll:()=>{const r=sGet('rc_p')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
+  pGet:id=>(sGet('rc_p')||[]).find(x=>x.id===id)||null,
+  pSave:p=>{const a=sGet('rc_p')||[],i=a.findIndex(x=>x.id===p.id);i>=0?a[i]=p:a.push(p);sSet('rc_p',a);return p;},
+  pDel:id=>sSet('rc_p',(sGet('rc_p')||[]).filter(x=>x.id!==id)),
+  // Encounters
+  eForPat:pid=>(sGet('rc_enc')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time)),
+  eGet:id=>(sGet('rc_enc')||[]).find(x=>x.id===id)||null,
+  eSave:e=>{const a=sGet('rc_enc')||[],i=a.findIndex(x=>x.id===e.id);i>=0?a[i]=e:a.push(e);sSet('rc_enc',a);return e;},
+  eDel:id=>sSet('rc_enc',(sGet('rc_enc')||[]).filter(x=>x.id!==id)),
+  // Injections
+  iAll:()=>{const r=sGet('rc_i')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
+  iGet:id=>(sGet('rc_i')||[]).find(x=>x.id===id)||null,
+  iForPat:pid=>(sGet('rc_i')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
+  iSave:i=>{const a=sGet('rc_i')||[],idx=a.findIndex(x=>x.id===i.id);idx>=0?a[idx]=i:a.push(i);sSet('rc_i',a);return i;},
+  iDel:id=>sSet('rc_i',(sGet('rc_i')||[]).filter(x=>x.id!==id)),
+  // Surgeries
+  sAll:()=>{const r=sGet('rc_s')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
+  sxGet:id=>(sGet('rc_s')||[]).find(x=>x.id===id)||null,
+  sForPat:pid=>(sGet('rc_s')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
+  sSave:s=>{const a=sGet('rc_s')||[],i=a.findIndex(x=>x.id===s.id);i>=0?a[i]=s:a.push(s);sSet('rc_s',a);return s;},
+  sDel:id=>sSet('rc_s',(sGet('rc_s')||[]).filter(x=>x.id!==id)),
+  // Citas (appointments)
+  citaAll:   ()=>{const r=sGet('rc_citas')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
+  citaForPat:pid=>(sGet('rc_citas')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)),
+  citaSave:  c=>{const a=sGet('rc_citas')||[],i=a.findIndex(x=>x.id===c.id);i>=0?a[i]=c:a.push(c);sSet('rc_citas',a);return c;},
+  citaDel:   id=>sSet('rc_citas',(sGet('rc_citas')||[]).filter(x=>x.id!==id))
+};
+
+// ══════════════ CONSTANTS ══════════════
+const DEF_DIAGS=['DMRE Húmeda','DMRE Seca','Edema Macular Diabético','Oclusión Venosa Retiniana','Neovascularización Coroidea','Membrana Epirretiniana','Agujero Macular','Desprendimiento de Retina','Endoftalmitis','Uveítis','Retinopatía Diabética','Catarata','Glaucoma','Ametropía'];
+const EYES=['OD','OI','AO'];
+const MEDS=['Bevacizumab','Clindamicina + Dexametasona','Metotrexate','Vancomicina','Ceftazidima','Dexametasona'];
+const ANT_SIS=[{k:'hta',l:'HTA'},{k:'dm',l:'DM'},{k:'coronaria',l:'Enf. Coronaria'},{k:'iam',l:'IAM'},{k:'irc',l:'IRC'},{k:'artritis',l:'Artritis R.'},{k:'epoc',l:'EPOC'},{k:'enf_neuro',l:'Enf. Neurológica'},{k:'cancer',l:'Cáncer'},{k:'alt_coag',l:'Alt. Coagulación'},{k:'enf_tir',l:'Enf. Tiroides'},{k:'hiv',l:'HIV'}];
+const ENC_TYPES=['Consulta','Interconsulta','Urgencia','Control Post-Qx','Control Post-IVT'];
+const STATUS_MAP={activo:{cls:'b-green',label:'Activo'},seguimiento:{cls:'b-blue',label:'En seguimiento'},alta:{cls:'b-gray',label:'Alta médica'},inactivo:{cls:'b-amber',label:'Inactivo'}};
+
+// ══════════════ SX TYPES CATALOG ══════════════
+const getSxTipos=()=>(sGet('rc_sxt')||[]).filter(s=>s.did===MY_DID()).sort((a,b)=>a.name.localeCompare(b.name));
+const addSxTipo=name=>{const e={id:genId(),name:name.trim(),did:MY_DID(),org_id:MY_ORG(),createdAt:today()};const a=sGet('rc_sxt')||[];a.push(e);sSet('rc_sxt',a);return e;};
+const delSxTipo=id=>sSet('rc_sxt',(sGet('rc_sxt')||[]).filter(s=>s.id!==id));
+function confirmSxTipoAdd(aid,gid){
+  const inp=document.getElementById(`ea-${aid}-val`);const name=(inp?.value||'').trim();
+  if(!name){toast('⚠ Ingrese un nombre.','warn');return;}
+  if(getSxTipos().find(x=>x.name.toLowerCase()===name.toLowerCase())){toast(`"${name}" ya existe.`,'warn');return;}
+  const e=addSxTipo(name);
+  // Add to grid dynamically
+  const grid=document.getElementById(gid);
+  if(grid){const lbl=document.createElement('label');lbl.className='proc-item sel';lbl.innerHTML=`<input type="checkbox" name="proc" value="${esc(e.name)}" checked onchange="this.closest('.proc-item').classList.toggle('sel',this.checked)"><span>${esc(e.name)}</span>`;grid.appendChild(lbl);}
+  cancelEntAdd(aid);toast(`✅ "${name}" agregado.`,'success');
+}
+
+const SX_ESTADOS=[
+  {v:'programada',      l:'Programada',          ico:'📅', cssCls:'sx-programada'},
+  {v:'pendiente_economico',l:'Pendiente económico',ico:'💰', cssCls:'sx-pendiente_economico'},
+  {v:'realizada',       l:'Realizada',            ico:'✅', cssCls:'sx-realizada'},
+  {v:'cancelada',       l:'Cancelada',            ico:'❌', cssCls:'sx-cancelada'}
+];
+const CITA_TIPOS=[
+  {v:'consulta',    l:'Consulta',          ico:'📋'},
+  {v:'inyeccion',   l:'Inyección IVT',     ico:'💉'},
+  {v:'control',     l:'Control',           ico:'🔍'},
+  {v:'cirugia',     l:'Cirugía',           ico:'🔬'},
+  {v:'urgencia',    l:'Urgencia',          ico:'🚨'}
+];
+const CITA_ESTADOS=[
+  {v:'programada',  l:'Programada',   cls:'b-blue'},
+  {v:'atendida',    l:'Atendida',     cls:'b-green'},
+  {v:'cancelada',   l:'Cancelada',    cls:'b-gray'},
+  {v:'no_asistio',  l:'No asistió',   cls:'b-red'}
+];
+const CL_ITEMS=[
+  {k:'lab',   l:'Laboratorio completo'},
+  {k:'ecg',   l:'ECG / Electrocardiograma'},
+  {k:'aut',   l:'Autorización clínica / cardiológica'},
+  {k:'bio',   l:'Biometría ocular'},
+  {k:'end',   l:'Recuento endotelial'}
+];
+const clStatus=sx=>{const cl=sx.checklist||{};const done=CL_ITEMS.filter(i=>cl[i.k]).length;return{all:done===CL_ITEMS.length,done,total:CL_ITEMS.length};};
+const esLabel=v=>{const e=SX_ESTADOS.find(x=>x.v===v)||SX_ESTADOS[0];return`${e.ico} ${e.l}`;};
+const esCls=v=>(SX_ESTADOS.find(x=>x.v===v)||SX_ESTADOS[0]).cssCls;
+
+// ══════════════ CLINICAL LOGIC ══════════════
+const cycleInfo=pid=>{const n=DB.iForPat(pid).length;return{cycle:Math.floor(n/3)+1,dose:(n%3)+1,total:n};};
+const nextDateFor=(date,dose)=>addDays(date,dose===3?90:30);
+const patStatus=pid=>{
+  const injs=DB.iForPat(pid);
+  if(!injs.length)return{status:'sin-datos',label:'Sin procedimientos',cls:'b-gray',daysUntil:null,next:null};
+  const last=injs[injs.length-1];
+  if(!last.nextDate)return{status:'sin-fecha',label:'Sin fecha próxima',cls:'b-gray',daysUntil:null,next:null};
+  const d=diffDays(today(),last.nextDate);
+  if(d<-30)return{status:'muy-atrasado',label:'Muy atrasado',cls:'b-red',daysUntil:d,next:last.nextDate};
+  if(d<0)  return{status:'atrasado',label:'Atrasado',cls:'b-amber',daysUntil:d,next:last.nextDate};
+  if(d<=7) return{status:'esta-semana',label:'Esta semana',cls:'b-orange',daysUntil:d,next:last.nextDate};
+  if(d<=30)return{status:'proximo',label:'Próximo',cls:'b-blue',daysUntil:d,next:last.nextDate};
+  return{status:'en-seguimiento',label:'En seguimiento',cls:'b-green',daysUntil:d,next:last.nextDate};
+};
+
+// ══════════════ EMPTY ENCOUNTER ══════════════
+function emptyEnc(pid){
+  return{
+    id:genId(),did:MY_DID(),org_id:MY_ORG(),pid,
+    date:today(),time:nowT(),type:'Consulta',
+    enf_actual:'',ant:{},obs_ant:'',farm_ant:'',qx_ant:'',
+    uso_cc:'',qx_oftalmo:'',uso_gotas:'',trauma_oftalmo:'',tox_alerg:'',traumat:'',familiares:'',
+    av_sc:{od:'',od_ph:'',od_vc:'',oi:'',oi_ph:'',oi_vc:''},
+    av_cc:{od_esf:'',od_cil:'',od_eje:'',od_av:'',oi_esf:'',oi_cil:'',oi_eje:'',oi_av:''},
+    kM:{od_k1:'',od_e1:'',od_k2:'',od_e2:'',oi_k1:'',oi_e1:'',oi_k2:'',oi_e2:''},
+    subj:{od_esf:'',od_cil:'',od_eje:'',od_av:'',od_add:'',oi_esf:'',oi_cil:'',oi_eje:'',oi_av:'',oi_add:''},
+    dip:'',opto_obs:'',
+    hirschberg:'CENTRADO.',ducciones:'NORMALES.',cover_test:'ORTOFORIA.',
+    pu:{od_t:'4',od_f:'+',od_c:'+',od_a:'+',od_mg:'-',oi_t:'4',oi_f:'+',oi_c:'+',oi_a:'+',oi_mg:'-'},
+    externo:'',
+    biomicroscopia:'',cristalino:'',pio:[],retina_vitreo:'',
+    dx_list:[],paraclinicos:'',plan:'',
+    gonio_obs_od:'',gonio_obs_oi:'',examenes_adicionales:'',
+    createdAt:today(),updatedAt:today()
+  };
+}
+
+// ══════════════ STATE ══════════════
+let S={view:'patients',pid:null,eid:null,tab:'enf-antec',encId:null,q:'',sxFilt:'all',agendaTab:'hoy',dashPeriod:'mes'};
+
+// ══════════════ NAVIGATION ══════════════
+function nav(view,params={}){
+  S={...S,view,...params};
+  closeAllDD();
+  destroyCharts();
+  document.getElementById('sb-inner').innerHTML=renderSidebar();
+  document.getElementById('view').innerHTML=renderView();
+  document.getElementById('main').scrollTo(0,0);
+  updateNotifBadge();
+}
+
+function renderSidebar(){
+  const isHC=['patient-hc','injection-form','surgery-form'].includes(S.view)&&S.pid;
+  if(isHC){
+    const p=DB.pGet(S.pid)||{};
+    return`<div class="ps-header">
+      <div class="ps-label">Paciente</div>
+      <div class="ps-name">${esc(p.ln)}, ${esc(p.fn)}</div>
+      <div class="ps-ci">CI: ${esc(p.cedula)}</div>
+    </div>
+    <div style="padding:6px 0">
+      <button class="ps-item" onclick='nav("patients",{pid:null})'><span style="font-size:13px">←</span> Volver a Pacientes</button>
+    </div>
+    <div style="height:1px;background:var(--dk-b);margin:2px 0"></div>
+    <div style="font-size:9px;color:#3d5a80;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 13px 3px">Historia Clínica</div>
+    <button class="ps-item ${S.view==='patient-hc'?'active':''}" onclick='nav("patient-hc",{pid:"${S.pid}",tab:"enf-antec"})'>📋 Historia Clínica</button>
+    <button class="ps-item ${S.view==='injection-form'?'active':''}" onclick='nav("patient-hc",{pid:"${S.pid}",tab:"inyecciones"})'>💉 Inyecciones</button>
+    <button class="ps-item ${S.view==='surgery-form'?'active':''}" onclick='nav("patient-hc",{pid:"${S.pid}",tab:"qx"})'>🔬 Cirugías</button>
+    <div style="height:1px;background:var(--dk-b);margin:4px 0"></div>
+    <div style="font-size:9px;color:#3d5a80;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 13px 3px">Paciente</div>
+    <button class="ps-item" onclick='nav("patient-form",{eid:"${S.pid}",pid:"${S.pid}"})'>✏️ Editar Datos</button>`;
+  }
+  const items=[
+    {v:'patients',    ico:'👥',l:'Pacientes'},
+    {v:'agenda',      ico:'📅',l:'Agenda'},
+    {v:'injections',  ico:'💉',l:'Inyecciones'},
+    {v:'surgeries',   ico:'🔬',l:'Cirugías'},
+    {v:'sx-followup', ico:'🏥',l:'Seguimiento Qx'},
+    {v:'dashboard',   ico:'📊',l:'Dashboard'},
+    null,
+    {v:'settings',    ico:'⚙️',l:'Configuración'},
+    {v:'admin',       ico:'👑',l:'Administración',admin:true}
+  ];
+  return items.map(x=>{
+    if(!x)return'<div style="height:1px;background:var(--dk-b);margin:4px 0"></div>';
+    if(x.admin&&SESSION.role!=='super_admin')return'';
+    const active=S.view===x.v||(x.v==='patients'&&['patient-form','patient-detail'].includes(S.view));
+    return`<button class="sb-item ${active?'active':''}" onclick='nav("${x.v}")'>
+      <span class="sb-ico">${x.ico}</span>${x.l}</button>`;
+  }).join('');
+}
+
+// ══════════════ RENDER ══════════════
+function renderView(){
+  switch(S.view){
+    case 'patients':      return vPatients();
+    case 'patient-form':  return vPatientForm();
+    case 'patient-detail':return vPatientDetail();
+    case 'patient-hc':    return vPatientHC();
+    case 'injections':    return vInjections();
+    case 'injection-form':return vInjectionForm();
+    case 'surgeries':     return vSurgeries();
+    case 'surgery-form':  return vSurgeryForm();
+    case 'sx-followup':   return vSxFollowup();
+    case 'agenda':        return vAgenda();
+    case 'cita-form':     return vCitaForm();
+    case 'dashboard':     return vDashboard();
+    case 'settings':      return vSettings();
+    case 'admin':         return SESSION.role==='super_admin'?vAdmin():vPatients();
+    default:              return vPatients();
+  }
+}
+
+// ══════════════ SHARED ══════════════
+const PH=(t,s,acts='')=>`<div class="ph"><div><div class="ph-title">${t}</div>${s?`<div class="ph-sub" style="font-size:11.5px;color:var(--g500);margin-top:1px">${s}</div>`:''}</div><div class="ph-actions">${acts}</div></div>`;
+const BK=(l,v,p='{}')=>`<button class="btn btn-ghost btn-sm" onclick='nav("${v}",${p})'>← ${l}</button>`;
+const BADGE=(cls,txt)=>`<span class="badge ${cls}">${esc(txt)}</span>`;
+const SH=t=>`<div class="sh"><span class="sh-t">${t}</span><div class="sh-d"></div></div>`;
+const EMPTY=(ico,t,s,btn='')=>`<div class="empty"><div class="empty-ico">${ico}</div><div class="empty-t">${t}</div><div class="empty-s">${s}</div>${btn}</div>`;
+
+// ══════════════ VIEW: PATIENTS ══════════════
+function vPatients(){
+  const all=DB.pAll(),q=S.q.toLowerCase().trim();
+  const list=(q?all.filter(p=>`${p.fn} ${p.ln} ${p.cedula}`.toLowerCase().includes(q)):all).sort((a,b)=>a.ln.localeCompare(b.ln));
+  const rows=list.map(p=>{
+    const age=calcAge(p.bd);const st=STATUS_MAP[p.status||'activo']||STATUS_MAP.activo;
+    const ni=DB.iForPat(p.id).length,ne=DB.eForPat(p.id).length,ns=DB.sForPat(p.id).length;
+    return`<tr onclick='nav("patient-hc",{pid:"${p.id}",encId:null,tab:"enf-antec"})' style="cursor:pointer">
+      <td><div class="pat-cell"><div class="avatar">${esc(p.fn[0]||'?')}${esc(p.ln[0]||'?')}</div>
+        <div><div class="fw7">${esc(p.ln)}, ${esc(p.fn)}</div>
+        <div class="txt-m txt-sm">CI: ${esc(p.cedula)}${age?` · ${age}a`:''}${p.req_seg?` <span class="seg-badge">⚑</span>`:''}</div></div>
+      </div></td>
+      <td class="txt-sm">${esc(p.diag||'—')}</td>
+      <td class="txt-sm txt2">${ne} HC · ${ni} iny · ${ns} cx</td>
+      <td>${BADGE(st.cls,st.label)}</td>
+      <td class="txt-sm">${esc(p.phone)}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn-icon" onclick='nav("patient-form",{eid:"${p.id}"})'>✏️</button>
+        <button class="btn-icon" onclick='printPatSummary("${p.id}")' title="Imprimir resumen">🖨</button>
+        <button class="btn-icon" onclick='delPat("${p.id}")'>🗑️</button>
+      </td></tr>`;
+  }).join('');
+  return PH('Pacientes',`${all.length} paciente${all.length!==1?'s':''} · ${SESSION.name}`,
+    `<button class="btn btn-teal" onclick='nav("patient-form",{eid:null})'>+ Nuevo Paciente</button>`)
+  +`<div class="ca">
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div class="search-wrap" style="flex:1;max-width:400px"><span class="search-ico">🔍</span>
+        <input class="search-in" type="text" placeholder="Buscar por nombre, apellido o cédula…" value="${esc(S.q)}"
+          oninput="S.q=this.value;document.getElementById('view').innerHTML=renderView()"></div>
+      <div class="txt-sm txt-m" style="display:flex;align-items:center">${list.length} resultado${list.length!==1?'s':''}</div>
+    </div>
+    ${list.length===0?EMPTY('👥',all.length===0?'Sin pacientes':'Sin resultados',all.length===0?'Registre el primer paciente.':'Sin coincidencias.',all.length===0?`<button class="btn btn-teal" onclick='nav("patient-form",{eid:null})'>+ Nuevo Paciente</button>`:''):
+    `<div class="card p0"><table class="data-table">
+      <thead><tr><th>Paciente</th><th>Diagnóstico</th><th>Actividad</th><th>Estado</th><th>Teléfono</th><th>Acc.</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`}
+  </div>`;
+}
+
+// ══════════════ VIEW: PATIENT FORM ══════════════
+function vPatientForm(){
+  const p=S.eid?DB.pGet(S.eid):null;const d=p||{};const isNew=!p;
+  const backPid=S.pid||S.eid;
+  const backBtn=backPid?BK('Volver','patient-hc',`{pid:"${backPid}",tab:"enf-antec"}`):BK('Volver','patients');
+  return PH(isNew?'Nuevo Paciente':`Editar: ${esc(d.ln||'')}, ${esc(d.fn||'')}`,
+    isNew?'Complete los campos obligatorios':'Actualice la información',backBtn)
+  +`<div class="ca"><div class="card pad" style="max-width:700px">
+    <form id="pf" onsubmit="submitPat(event)">
+      <div class="form-sec">Identificación</div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Apellido(s) <span class="req">*</span></label><input class="fi" name="ln" value="${esc(d.ln||'')}" required placeholder="Apellido" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Nombre(s) <span class="req">*</span></label><input class="fi" name="fn" value="${esc(d.fn||'')}" required placeholder="Nombre" autocomplete="off"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Cédula <span class="req">*</span></label><input class="fi" name="cedula" value="${esc(d.cedula||'')}" required placeholder="Ej: 4850778" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Celular <span class="req">*</span></label><input class="fi" name="phone" type="tel" value="${esc(d.phone||'')}" required placeholder="+595 9 8123-4567"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Email</label><input class="fi" name="email" type="email" value="${esc(d.email||'')}" placeholder="correo@ejemplo.com"></div>
+        <div class="fg"><label class="fl">Fecha de Nacimiento</label><input class="fi" name="bd" type="date" value="${esc(d.bd||'')}" max="${today()}"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Sexo</label><select class="fs" name="sex"><option value="">—</option><option value="M" ${d.sex==='M'?'selected':''}>Masculino</option><option value="F" ${d.sex==='F'?'selected':''}>Femenino</option></select></div>
+        <div class="fg"><label class="fl">Estado</label><select class="fs" name="status"><option value="activo" ${(d.status||'activo')==='activo'?'selected':''}>Activo</option><option value="seguimiento" ${d.status==='seguimiento'?'selected':''}>En seguimiento</option><option value="alta" ${d.status==='alta'?'selected':''}>Alta médica</option><option value="inactivo" ${d.status==='inactivo'?'selected':''}>Inactivo</option></select></div>
+      </div>
+      <div class="form-sec" style="margin-top:14px">Clínico</div>
+      <div class="fg"><label class="fl">Diagnóstico Principal</label>
+        <select class="fs" name="diag"><option value="">—</option>${DEF_DIAGS.map(x=>`<option value="${esc(x)}" ${d.diag===x?'selected':''}>${esc(x)}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Notas Clínicas</label><textarea class="ft" name="notes" rows="2" placeholder="Antecedentes relevantes, alergias…">${esc(d.notes||'')}</textarea></div>
+      <div class="form-sec" style="margin-top:14px">Seguimiento Especial</div>
+      <div class="fg" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" name="req_seg" id="req_seg" ${d.req_seg?'checked':''} style="width:15px;height:15px;accent-color:var(--purple);cursor:pointer;flex-shrink:0">
+        <label for="req_seg" style="cursor:pointer;font-size:13.5px">Requiere seguimiento especial <span class="seg-badge">⚑</span></label>
+      </div>
+      <div class="fg"><label class="fl">Nota de seguimiento</label><textarea class="ft" name="nota_seg" rows="2" placeholder="Ej: llamar al familiar…">${esc(d.nota_seg||'')}</textarea></div>
+      <div class="fg" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" name="pendiente" id="pendiente" ${d.pendiente?'checked':''} style="width:15px;height:15px;accent-color:var(--red);cursor:pointer;flex-shrink:0">
+        <label for="pendiente" style="cursor:pointer;font-size:13.5px;color:var(--red);font-weight:600">⚠ Marcar como PENDIENTE (aparece destacado en agenda)</label>
+      </div>
+      <div class="fg"><label class="fl">Nota del pendiente</label><textarea class="ft" name="nota_pendiente" rows="2" placeholder="Ej: paciente no asistió, requiere reagendar…">${esc(d.nota_pendiente||'')}</textarea></div>
+      <input type="hidden" name="id" value="${esc(d.id||'')}">
+      <div id="pf-err" style="display:none"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick='${backPid?`nav("patient-hc",{pid:"${backPid}",tab:"enf-antec"})`:`nav("patients")`}'>Cancelar</button>
+        <button type="submit" class="btn btn-teal">${isNew?'✅ Crear Paciente':'💾 Guardar Cambios'}</button>
+      </div>
+    </form>
+  </div></div>`;
+}
+function submitPat(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];
+  if(!d.ln?.trim())errs.push('El apellido es obligatorio.');
+  if(!d.fn?.trim())errs.push('El nombre es obligatorio.');
+  if(!d.cedula?.trim())errs.push('La cédula es obligatoria.');
+  if(!d.phone?.trim())errs.push('El teléfono es obligatorio.');
+  const dup=DB.pAll().find(p=>p.cedula.trim()===d.cedula.trim()&&p.id!==d.id);
+  if(dup)errs.push(`Cédula ${esc(d.cedula)} ya registrada: ${esc(dup.ln)}, ${esc(dup.fn)}.`);
+  const errDiv=document.getElementById('pf-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');errDiv.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
+  const pat={id:d.id||genId(),org_id:MY_ORG(),did:MY_DID(),fn:d.fn.trim(),ln:d.ln.trim(),cedula:d.cedula.trim(),phone:d.phone.trim(),email:(d.email||'').trim(),bd:d.bd||null,sex:d.sex||null,status:d.status||'activo',diag:d.diag||null,notes:(d.notes||'').trim(),req_seg:!!d.req_seg,nota_seg:(d.nota_seg||'').trim(),pendiente:!!d.pendiente,nota_pendiente:(d.nota_pendiente||'').trim(),createdAt:d.id?(DB.pGet(d.id)?.createdAt||today()):today()};
+  DB.pSave(pat);toast(`✅ Paciente ${esc(pat.ln)}, ${esc(pat.fn)} ${!d.id?'creado':'actualizado'}.`,'success');
+  nav('patient-hc',{pid:pat.id,tab:'enf-antec'});
+}
+
+// ══════════════ VIEW: PATIENT DETAIL ══════════════
+function vPatientDetail(){
+  const p=DB.pGet(S.pid);if(!p)return'<div class="ca"><p class="txt-m">No encontrado.</p></div>';
+  nav('patient-hc',{pid:S.pid,tab:'enf-antec'});return'';
+}
+
+// ══════════════ VIEW: PATIENT HC (HISTORIA CLÍNICA) ══════════════
+function vPatientHC(){
+  const pat=DB.pGet(S.pid);if(!pat)return'<div class="ca"><p class="txt-m">Paciente no encontrado.</p></div>';
+  let encs=DB.eForPat(pat.id);
+  // Get or create encounter
+  let enc=S.encId?DB.eGet(S.encId):null;
+  if(!enc&&encs.length>0)enc=encs[0];
+  if(!enc){enc=emptyEnc(pat.id);DB.eSave(enc);encs=DB.eForPat(pat.id);}
+  if(S.encId!==enc.id)S.encId=enc.id;
+  const encIdx=encs.findIndex(x=>x.id===enc.id);
+  const age=calcAge(pat.bd);
+  const TABS=[{k:'enf-antec',l:'Enf. A. Antec.'},{k:'antec',l:'Antec.'},{k:'optomet',l:'Optomet.'},{k:'examen',l:'Exám'},{k:'bio-pio',l:'Bio·Pio·Retina'},{k:'dx-plan',l:'Dx y Plan'},{k:'qx',l:'Qx'},{k:'inyecciones',l:'Inyecciones'}];
+  return`<div class="hc-wrap">
+  <div class="hc-main">
+    <!-- Patient header -->
+    <div class="pat-hdr">
+      <div>
+        <div class="pat-hdr-name">${esc(pat.ln)} ${esc(pat.fn)}</div>
+        <div class="pat-hdr-bread">
+          <span onclick='nav("patients",{pid:null})'>Paciente</span> /
+          <span>Historia</span> / Evoluciones
+        </div>
+      </div>
+      <div class="pat-hdr-actions">
+        ${pat.pendiente?`<div class="pendiente-banner"><span>⚠</span><span style="font-size:12.5px;font-weight:600;color:var(--purple)">${esc(pat.nota_pendiente||'Pendiente')}</span>
+          <button class="btn btn-ghost btn-xs" onclick="togglePendiente('${pat.id}',false)" style="margin-left:auto">✓ Resolver</button></div>`
+          :`<button class="enc-nav-btn" onclick="togglePendiente('${pat.id}',true)">⚑ Marcar Pendiente</button>`}
+        <button class="enc-nav-btn" onclick='nav("cita-form",{pid:"${pat.id}",eid:null})'>📅 Nueva Cita</button>
+        <button class="enc-nav-btn" onclick="saveEnc('${enc.id}')">💾 Guardar</button>
+        <button class="enc-nav-btn" onclick="printHC('${enc.id}','${pat.id}')">🖨 Imprimir HC</button>
+        <button class="enc-nav-btn" onclick='nav("patient-form",{eid:"${pat.id}",pid:"${pat.id}"})'>✏️ Editar</button>
+      </div>
+    </div>
+    <!-- Encounter navigation -->
+    <div class="enc-nav">
+      <button class="enc-nav-btn" title="Primera" onclick='navEnc("first","${pat.id}")'>|◀</button>
+      <button class="enc-nav-btn" title="Anterior" onclick='navEnc("prev","${pat.id}")'>◀</button>
+      <button class="enc-nav-btn" title="Siguiente" onclick='navEnc("next","${pat.id}")'>▶</button>
+      <button class="enc-nav-btn" title="Última" onclick='navEnc("last","${pat.id}")'>▶|</button>
+      <button class="enc-nav-btn" onclick='delEnc("${enc.id}","${pat.id}")' title="Eliminar esta consulta">✕</button>
+      <span class="enc-date">${fmtD(enc.date)} ${enc.time||''}</span>
+      <select class="enc-nav-btn" style="font-size:12px;min-width:115px" onchange="changeEncType(this.value,'${enc.id}')">
+        ${ENC_TYPES.map(t=>`<option value="${t}" ${enc.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <input type="date" class="enc-nav-btn" style="font-size:12px;min-width:130px" value="${enc.date}" onchange="changeEncDate(this.value,'${enc.id}')">
+      <span class="enc-counter">${encIdx+1} / ${encs.length}</span>
+      <button class="enc-nav-btn teal" onclick='newEnc("${pat.id}")'>+ Nueva Consulta</button>
+    </div>
+    <!-- Tabs -->
+    <div class="hc-tabbar">
+      ${TABS.map(t=>`<button class="hc-tab ${S.tab===t.k?'active':''}" onclick="switchTab('${t.k}','${enc.id}')">${t.l}</button>`).join('')}
+    </div>
+    <!-- Tab content -->
+    <div id="hc-content">${renderTab(enc,pat)}</div>
+  </div>
+  <!-- Right panel -->
+  <div class="hc-right">
+    <div class="rp-top">
+      <div class="rp-age">${age||'—'} Año(s)</div>
+      <div class="rp-type">${pat.status||'PARTICULAR'}</div>
+      ${pat.req_seg?`<div style="margin-top:6px"><span class="seg-badge">⚑ Seg. especial</span></div>`:''}
+    </div>
+    <div class="rp-lbl">Acciones</div>
+    <button class="rp-link" onclick='newEnc("${pat.id}")'><span>📅</span> Nueva Consulta</button>
+    <button class="rp-link" onclick="switchTab('inyecciones','${enc.id}')"><span>💉</span> Inyecciones</button>
+    <button class="rp-link" onclick="switchTab('qx','${enc.id}')"><span>🔬</span> Cirugías</button>
+    <button class="rp-link" onclick="switchTab('dx-plan','${enc.id}')"><span>📋</span> Diagnósticos</button>
+    <div class="rp-sep"></div>
+    <div class="rp-lbl">Próximas Citas</div>
+    ${DB.citaForPat(pat.id).filter(c=>c.date>=today()&&c.estado==='programada').slice(0,3).map(c=>`
+      <div style="padding:6px 13px;font-size:12px;border-bottom:1px solid var(--g100)">
+        <div style="display:flex;align-items:center;gap:6px">
+          ${(CITA_TIPOS.find(t=>t.v===c.tipo)||CITA_TIPOS[0]).ico}
+          <strong>${fmtD(c.date)}</strong>
+          <span class="txt-m">${c.time||''}</span>
+        </div>
+        <div class="txt-m" style="font-size:11px;margin-top:1px">${esc(c.notas||c.tipo)}</div>
+      </div>`).join('')||'<div class="empty-mini" style="padding:8px 13px">Sin citas programadas.</div>'}
+    <button class="rp-link" onclick='nav("cita-form",{pid:"${pat.id}",eid:null})'><span>➕</span> Agregar Cita</button>
+    <div class="rp-sep"></div>
+    <div class="rp-lbl">Imprimir</div>
+    <button class="rp-link" onclick="printHC('${enc.id}','${pat.id}')"><span>🖨</span> Esta Consulta</button>
+    <button class="rp-link" onclick="printPatSummary('${pat.id}')"><span>📄</span> Resumen del Paciente</button>
+    <div class="rp-sep"></div>
+    <div class="rp-lbl">Consultas Previas</div>
+    ${encs.slice(0,8).map(e=>`<button class="rp-link ${e.id===enc.id?'current':''}" onclick='loadEnc("${e.id}")'>
+      <span>📄</span>
+      <span style="flex:1;text-align:left"><span style="display:block">${fmtD(e.date)}</span>
+      <span class="txt-m txt-sm">${e.type||'Consulta'}</span></span>
+    </button>`).join('')||'<div class="empty-mini">Sin consultas previas.</div>'}
+    <div class="rp-sep"></div>
+    <div class="rp-lbl">Datos del Paciente</div>
+    <div style="padding:8px 13px;font-size:12px">
+      <div class="txt-m">Cédula</div><div class="fw7 mb10">${esc(pat.cedula)}</div>
+      <div class="txt-m">Teléfono</div><div class="fw7 mb10">${esc(pat.phone)}</div>
+      ${pat.diag?`<div class="txt-m">Diagnóstico</div><div class="fw7">${esc(pat.diag)}</div>`:''}
+      ${pat.nota_seg?`<div style="margin-top:8px" class="txt-sm txt2">${esc(pat.nota_seg)}</div>`:''}
+    </div>
+  </div>
+</div>`;
+}
+
+function renderTab(enc,pat){
+  switch(S.tab){
+    case 'enf-antec':  return tabEnfAntec(enc);
+    case 'antec':      return tabAntec(enc);
+    case 'optomet':    return tabOptomet(enc);
+    case 'examen':     return tabExamen(enc);
+    case 'bio-pio':    return tabBioPio(enc);
+    case 'dx-plan':    return tabDxPlan(enc);
+    case 'qx':         return tabQx(enc,pat);
+    case 'inyecciones':return tabInj(enc,pat);
+    default:           return tabEnfAntec(enc);
+  }
+}
+
+// ── ENCOUNTER ACTIONS ──
+function eF(field,encId,val){const e=DB.eGet(encId);if(!e)return;const parts=field.split('.');if(parts.length===2){e[parts[0]]=e[parts[0]]||{};e[parts[0]][parts[1]]=val;}else{e[field]=val;}e.updatedAt=today();DB.eSave(e);}
+function eAnt(key,encId,val){const e=DB.eGet(encId);if(!e)return;e.ant=e.ant||{};e.ant[key]=val;e.updatedAt=today();DB.eSave(e);}
+function ePu(key,encId,val){const e=DB.eGet(encId);if(!e)return;e.pu=e.pu||{};e.pu[key]=val;e.updatedAt=today();DB.eSave(e);}
+function saveEnc(id){const e=DB.eGet(id);if(!e)return;e.updatedAt=today();DB.eSave(e);toast('✅ Consulta guardada.','success');}
+function newEnc(pid){const e=emptyEnc(pid);DB.eSave(e);S.encId=e.id;S.tab='enf-antec';toast('Nueva consulta creada.','success');nav('patient-hc',{pid,encId:e.id,tab:'enf-antec'});}
+function loadEnc(id){S.encId=id;nav('patient-hc',{pid:S.pid,encId:id,tab:S.tab});}
+function delEnc(id,pid){if(!confirm('¿Eliminar esta consulta?'))return;DB.eDel(id);const encs=DB.eForPat(pid);S.encId=encs.length?encs[0].id:null;nav('patient-hc',{pid,encId:S.encId,tab:'enf-antec'});}
+function navEnc(dir,pid){
+  const encs=DB.eForPat(pid);if(!encs.length)return;
+  const idx=encs.findIndex(x=>x.id===S.encId);
+  const newIdx=dir==='first'?encs.length-1:dir==='last'?0:dir==='prev'?Math.min(encs.length-1,idx+1):Math.max(0,idx-1);
+  S.encId=encs[newIdx].id;nav('patient-hc',{pid,encId:S.encId,tab:S.tab});
+}
+function changeEncType(type,id){const e=DB.eGet(id);if(e){e.type=type;DB.eSave(e);}}
+function changeEncDate(date,id){const e=DB.eGet(id);if(e){e.date=date;DB.eSave(e);}}
+function switchTab(tab,encId){S.tab=tab;if(encId&&encId!=='undefined')S.encId=encId;const enc=DB.eGet(S.encId);const pat=DB.pGet(S.pid);if(!enc||!pat)return;document.querySelectorAll('.hc-tab').forEach(b=>b.classList.toggle('active',b.textContent.trim()===({'enf-antec':'Enf. A. Antec.','antec':'Antec.','optomet':'Optomet.','examen':'Exám','bio-pio':'Bio·Pio·Retina','dx-plan':'Dx y Plan','inyecciones':'Inyecciones'}[tab]||'')));document.getElementById('hc-content').innerHTML=renderTab(enc,pat);}
+
+// ── PIO ──
+function addPio(encId){const e=DB.eGet(encId);if(!e)return;e.pio=e.pio||[];e.pio.push({fecha:today(),hora:nowT(),od:'',oi:'',pqOD:'',pqOI:''});e.updatedAt=today();DB.eSave(e);document.getElementById('hc-content').innerHTML=renderTab(e,DB.pGet(e.pid));}
+function remPio(i,encId){const e=DB.eGet(encId);if(!e)return;e.pio=(e.pio||[]).filter((_,idx)=>idx!==i);e.updatedAt=today();DB.eSave(e);document.getElementById('hc-content').innerHTML=renderTab(e,DB.pGet(e.pid));}
+function updPio(i,f,encId,val){const e=DB.eGet(encId);if(!e||!e.pio[i])return;e.pio[i][f]=val;e.updatedAt=today();DB.eSave(e);}
+
+// ── DX ──
+function addDxToEnc(encId){
+  const sel=document.getElementById('dx-sel');const diag=sel?.value||'';
+  if(!diag){toast('⚠ Seleccione un diagnóstico.','warn');return;}
+  const ojo=document.getElementById('dx-ojo')?.value||'AO';const fecha=document.getElementById('dx-fecha')?.value||today();
+  const e=DB.eGet(encId);if(!e)return;e.dx_list=e.dx_list||[];e.dx_list.push({diag,ojo,fecha});e.updatedAt=today();DB.eSave(e);
+  document.getElementById('hc-content').innerHTML=renderTab(e,DB.pGet(e.pid));
+}
+function remDx(i,encId){const e=DB.eGet(encId);if(!e)return;e.dx_list=(e.dx_list||[]).filter((_,idx)=>idx!==i);e.updatedAt=today();DB.eSave(e);document.getElementById('hc-content').innerHTML=renderTab(e,DB.pGet(e.pid));}
+
+// ══════════════ HC TABS ══════════════
+const SEC=(title,ico,body)=>`<div class="hc-sec"><div class="hc-sec-hdr"><span>${title}</span><div class="ico">${ico}</div></div><div class="hc-sec-body">${body}</div></div>`;
+
+function tabEnfAntec(enc){
+  return SEC('Enfermedad Actual','📝',`
+    <div class="form-row">
+      <div class="fg"><label class="fl">Fecha</label><input class="fi fi-sm" type="date" value="${enc.date}" onchange="eF('date','${enc.id}',this.value)"></div>
+      <div class="fg"><label class="fl">Hora</label><input class="fi fi-sm" type="time" value="${enc.time||''}" onchange="eF('time','${enc.id}',this.value)"></div>
+    </div>
+    <div class="fg"><label class="fl">Motivo de Consulta / Enfermedad Actual</label>
+      <textarea class="ft" rows="4" placeholder="Describe el motivo de consulta y evolución de la enfermedad…" onchange="eF('enf_actual','${enc.id}',this.value)">${esc(enc.enf_actual||'')}</textarea></div>
+  `)
+  +SEC('Antecedentes Sistémicos','🏥',`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
+      ${ANT_SIS.map(a=>`<label style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--g200);border-radius:5px;cursor:pointer;font-size:12.5px;transition:.1s" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
+        <input type="checkbox" ${(enc.ant||{})[a.k]?'checked':''} style="width:13px;height:13px;accent-color:var(--teal);cursor:pointer" onchange="eAnt('${a.k}','${enc.id}',this.checked)"> ${a.l}
+      </label>`).join('')}
+    </div>
+    <div class="form-row3">
+      <div class="fg"><label class="fl">Observaciones</label><textarea class="ft" rows="2" onchange="eF('obs_ant','${enc.id}',this.value)">${esc(enc.obs_ant||'')}</textarea></div>
+      <div class="fg"><label class="fl">Farmacológicos</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('farm_ant','${enc.id}',this.value)">${esc(enc.farm_ant||'')}</textarea></div>
+      <div class="fg"><label class="fl">Quirúrgicos sistémicos</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('qx_ant','${enc.id}',this.value)">${esc(enc.qx_ant||'')}</textarea></div>
+    </div>
+  `);
+}
+
+function tabAntec(enc){
+  return SEC('Antecedentes Oftalmológicos','👁',`
+    <div class="form-row">
+      <div class="fg"><label class="fl">Uso Corrección</label><textarea class="ft" rows="2" placeholder="MONOFOCALES / BIFOCALES…" onchange="eF('uso_cc','${enc.id}',this.value)">${esc(enc.uso_cc||'')}</textarea></div>
+      <div class="fg"><label class="fl">Quirúrgicos Oftalmológicos</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('qx_oftalmo','${enc.id}',this.value)">${esc(enc.qx_oftalmo||'')}</textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Uso de Gotas</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('uso_gotas','${enc.id}',this.value)">${esc(enc.uso_gotas||'')}</textarea></div>
+      <div class="fg"><label class="fl">Trauma Ocular</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('trauma_oftalmo','${enc.id}',this.value)">${esc(enc.trauma_oftalmo||'')}</textarea></div>
+    </div>
+    <div class="form-row3">
+      <div class="fg"><label class="fl">Tóxico-Alérgicos</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('tox_alerg','${enc.id}',this.value)">${esc(enc.tox_alerg||'')}</textarea></div>
+      <div class="fg"><label class="fl">Traumatológicos</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('traumat','${enc.id}',this.value)">${esc(enc.traumat||'')}</textarea></div>
+      <div class="fg"><label class="fl">Familiares</label><textarea class="ft" rows="2" placeholder="NEGATIVOS." onchange="eF('familiares','${enc.id}',this.value)">${esc(enc.familiares||'')}</textarea></div>
+    </div>
+  `);
+}
+
+function tabOptomet(enc){
+  const av=enc.av_sc||{},cc=enc.av_cc||{},kM=enc.kM||{},sb=enc.subj||{};
+  const I=(grp,key,val)=>`<input class="opto-in" value="${esc(val||'')}" onchange="eF('${grp}.${key}','${enc.id}',this.value)">`;
+  return SEC('AV Sin Corrección y Con Corrección','👓',`
+    <div class="opto-lbl">AV Sin Corrección VL</div>
+    <div class="opto-wrap"><table class="opto-t">
+      <thead><tr><th>—</th><th>AV</th><th>PH</th><th>Con PH VC</th></tr></thead>
+      <tbody>
+        <tr><td class="opto-eye">OD</td><td>${I('av_sc','od',av.od)}</td><td>${I('av_sc','od_ph',av.od_ph)}</td><td>${I('av_sc','od_vc',av.od_vc)}</td></tr>
+        <tr><td class="opto-eye">OI</td><td>${I('av_sc','oi',av.oi)}</td><td>${I('av_sc','oi_ph',av.oi_ph)}</td><td>${I('av_sc','oi_vc',av.oi_vc)}</td></tr>
+      </tbody></table></div>
+    <div class="opto-lbl">AV Con Corrección</div>
+    <div class="opto-wrap"><table class="opto-t">
+      <thead><tr><th>—</th><th>Esfera</th><th>Cilindro</th><th>Eje</th><th>AV</th></tr></thead>
+      <tbody>
+        <tr><td class="opto-eye">OD</td><td>${I('av_cc','od_esf',cc.od_esf)}</td><td>${I('av_cc','od_cil',cc.od_cil)}</td><td>${I('av_cc','od_eje',cc.od_eje)}</td><td>${I('av_cc','od_av',cc.od_av)}</td></tr>
+        <tr><td class="opto-eye">OI</td><td>${I('av_cc','oi_esf',cc.oi_esf)}</td><td>${I('av_cc','oi_cil',cc.oi_cil)}</td><td>${I('av_cc','oi_eje',cc.oi_eje)}</td><td>${I('av_cc','oi_av',cc.oi_av)}</td></tr>
+      </tbody></table></div>
+    <div class="opto-lbl">Queratometría</div>
+    <div class="opto-wrap"><table class="opto-t">
+      <thead><tr><th>—</th><th>Km1</th><th>Eje Km1</th><th>Km2</th><th>Eje Km2</th></tr></thead>
+      <tbody>
+        <tr><td class="opto-eye">OD</td><td>${I('kM','od_k1',kM.od_k1)}</td><td>${I('kM','od_e1',kM.od_e1)}</td><td>${I('kM','od_k2',kM.od_k2)}</td><td>${I('kM','od_e2',kM.od_e2)}</td></tr>
+        <tr><td class="opto-eye">OI</td><td>${I('kM','oi_k1',kM.oi_k1)}</td><td>${I('kM','oi_e1',kM.oi_e1)}</td><td>${I('kM','oi_k2',kM.oi_k2)}</td><td>${I('kM','oi_e2',kM.oi_e2)}</td></tr>
+      </tbody></table></div>
+    <div class="opto-lbl">Refracción Subjetiva Final</div>
+    <div class="opto-wrap"><table class="opto-t">
+      <thead><tr><th>—</th><th>Esfera</th><th>Cilindro</th><th>Eje</th><th>AV</th><th>ADD</th></tr></thead>
+      <tbody>
+        <tr><td class="opto-eye">OD</td><td>${I('subj','od_esf',sb.od_esf)}</td><td>${I('subj','od_cil',sb.od_cil)}</td><td>${I('subj','od_eje',sb.od_eje)}</td><td>${I('subj','od_av',sb.od_av)}</td><td>${I('subj','od_add',sb.od_add)}</td></tr>
+        <tr><td class="opto-eye">OI</td><td>${I('subj','oi_esf',sb.oi_esf)}</td><td>${I('subj','oi_cil',sb.oi_cil)}</td><td>${I('subj','oi_eje',sb.oi_eje)}</td><td>${I('subj','oi_av',sb.oi_av)}</td><td>${I('subj','oi_add',sb.oi_add)}</td></tr>
+      </tbody></table></div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">DIP</label><input class="fi fi-sm" placeholder="ej: 62" value="${esc(enc.dip||'')}" onchange="eF('dip','${enc.id}',this.value)"></div>
+      <div class="fg"><label class="fl">Observaciones optometría</label><input class="fi fi-sm" value="${esc(enc.opto_obs||'')}" onchange="eF('opto_obs','${enc.id}',this.value)"></div>
+    </div>
+  `);
+}
+
+function tabExamen(enc){
+  const pu=enc.pu||{};
+  return SEC('Movimientos Oculares','👁',`
+    <div class="form-row3">
+      <div class="fg"><label class="fl">Hirschberg</label><input class="fi" value="${esc(enc.hirschberg||'CENTRADO.')}" onchange="eF('hirschberg','${enc.id}',this.value)"></div>
+      <div class="fg"><label class="fl">Ducciones y Versión</label><input class="fi" value="${esc(enc.ducciones||'NORMALES.')}" onchange="eF('ducciones','${enc.id}',this.value)"></div>
+      <div class="fg"><label class="fl">Cover Test</label><input class="fi" value="${esc(enc.cover_test||'ORTOFORIA.')}" onchange="eF('cover_test','${enc.id}',this.value)"></div>
+    </div>
+  `)
+  +SEC('Pupilas','⊙',`
+    <div style="display:grid;grid-template-columns:40px repeat(5,70px);gap:7px;align-items:center;margin-bottom:6px">
+      <div></div>
+      ${['T:','F:','C:','A:','MG:'].map(h=>`<div style="font-size:10.5px;font-weight:700;color:var(--g500);text-align:center">${h}</div>`).join('')}
+      ${['od','oi'].map(eye=>`
+        <div style="font-weight:700;font-size:12px;color:var(--dk)">${eye.toUpperCase()}</div>
+        <select class="fs fi-sm" style="text-align:center" onchange="ePu('${eye}_t','${enc.id}',this.value)">
+          ${[2,3,4,5,6,7].map(n=>`<option value="${n}" ${(pu[eye+'_t']||'4')===String(n)?'selected':''}>${n}</option>`).join('')}
+        </select>
+        <input class="fi fi-sm" style="text-align:center" value="${esc(pu[eye+'_f']||'+')}" onchange="ePu('${eye}_f','${enc.id}',this.value)">
+        <input class="fi fi-sm" style="text-align:center" value="${esc(pu[eye+'_c']||'+')}" onchange="ePu('${eye}_c','${enc.id}',this.value)">
+        <input class="fi fi-sm" style="text-align:center" value="${esc(pu[eye+'_a']||'+')}" onchange="ePu('${eye}_a','${enc.id}',this.value)">
+        <input class="fi fi-sm" style="text-align:center" value="${esc(pu[eye+'_mg']||'-')}" onchange="ePu('${eye}_mg','${enc.id}',this.value)">`).join('')}
+    </div>
+  `)
+  +SEC('Examen Externo','🔍',`
+    <textarea class="ft" rows="3" placeholder="NORMAL AMBOS OJOS" onchange="eF('externo','${enc.id}',this.value)">${esc(enc.externo||'')}</textarea>
+  `);
+}
+
+function tabBioPio(enc){
+  const pio=enc.pio||[];
+  return SEC('Biomicroscopía y Cristalino','🔬',`
+    <div class="fg"><label class="fl">Biomicroscopía</label>
+      <textarea class="ft" rows="3" placeholder="CONJUNTIVAS TRANQUILAS. CORNEA CLARA CON TINCION FLUORESCEINICA NEGATIVA. CAMARA ANTERIOR FORMADA. VAN HERICK IV. REFLEJO FOTOMOTOR CONSERVADO." onchange="eF('biomicroscopia','${enc.id}',this.value)">${esc(enc.biomicroscopia||'')}</textarea></div>
+    <div class="fg"><label class="fl">Cristalino</label>
+      <input class="fi" placeholder="TRANSPARENTE AMBOS OJOS / CATARATA NUCLEAR OD…" value="${esc(enc.cristalino||'')}" onchange="eF('cristalino','${enc.id}',this.value)"></div>
+  `)
+  +SEC('Presión Ocular (PIO)','📊',`
+    <div style="display:grid;grid-template-columns:120px 75px 55px 55px 75px 75px 30px;gap:5px;margin-bottom:6px">
+      ${['Fecha','Hora','OD','OI','Paqui OD','Paqui OI',''].map(h=>`<div class="pio-hdr">${h}</div>`).join('')}
+    </div>
+    ${pio.map((r,i)=>`<div style="display:grid;grid-template-columns:120px 75px 55px 55px 75px 75px 30px;gap:5px;margin-bottom:5px">
+      <input class="fi fi-sm" type="date" value="${esc(r.fecha||'')}" onchange="updPio(${i},'fecha','${enc.id}',this.value)">
+      <input class="fi fi-sm" type="time" value="${esc(r.hora||'')}" onchange="updPio(${i},'hora','${enc.id}',this.value)">
+      <input class="fi fi-sm" style="text-align:center" value="${esc(r.od||'')}" placeholder="OD" onchange="updPio(${i},'od','${enc.id}',this.value)">
+      <input class="fi fi-sm" style="text-align:center" value="${esc(r.oi||'')}" placeholder="OI" onchange="updPio(${i},'oi','${enc.id}',this.value)">
+      <input class="fi fi-sm" style="text-align:center" value="${esc(r.pqOD||'')}" placeholder="—" onchange="updPio(${i},'pqOD','${enc.id}',this.value)">
+      <input class="fi fi-sm" style="text-align:center" value="${esc(r.pqOI||'')}" placeholder="—" onchange="updPio(${i},'pqOI','${enc.id}',this.value)">
+      <button class="btn-icon" onclick="remPio(${i},'${enc.id}')">🗑️</button>
+    </div>`).join('')}
+    <button class="btn btn-ghost btn-sm" onclick="addPio('${enc.id}')">+ Agregar PIO</button>
+  `)
+  +SEC('Retina y Vítreo','🩺',`
+    <textarea class="ft" rows="5" placeholder="Describir hallazgos de retina y vítreo para OD e OI…" onchange="eF('retina_vitreo','${enc.id}',this.value)">${esc(enc.retina_vitreo||'')}</textarea>
+  `);
+}
+
+function tabDxPlan(enc){
+  const dxList=enc.dx_list||[];
+  return SEC('Diagnósticos de la Consulta','📋',`
+    ${dxList.length===0?'<div class="empty-mini">Sin diagnósticos en esta consulta.</div>':dxList.map((dx,i)=>`
+      <div class="dx-row">
+        <span class="txt-sm txt-m">${fmtD(dx.fecha)}</span>
+        <span class="fw7" style="flex:1">${esc(dx.diag)}</span>
+        ${BADGE('b-teal',dx.ojo||'AO')}
+        <button class="btn-icon" onclick="remDx(${i},'${enc.id}')">🗑️</button>
+      </div>`).join('')}
+    <div style="margin-top:10px;padding:12px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r)">
+      <div class="fl" style="margin-bottom:8px">Agregar Diagnóstico</div>
+      <div style="display:grid;grid-template-columns:1fr 85px 130px auto;gap:7px;align-items:start">
+        <div>${diagSel('','dx-sel','dx-new')}</div>
+        <select id="dx-ojo" class="fs fi-sm"><option value="AO">AO</option><option value="OD">OD</option><option value="OI">OI</option></select>
+        <input type="date" id="dx-fecha" class="fi fi-sm" value="${today()}">
+        <button class="btn btn-teal btn-sm" onclick="addDxToEnc('${enc.id}')">+ Agregar</button>
+      </div>
+    </div>
+  `)
+  +SEC('Paraclínicos / Plan de Atención','📝',`
+    <div class="form-row">
+      <div class="fg"><label class="fl">Paraclínicos y Análisis</label><textarea class="ft" rows="3" placeholder="Exámenes paraclínicos solicitados…" onchange="eF('paraclinicos','${enc.id}',this.value)">${esc(enc.paraclinicos||'')}</textarea></div>
+      <div class="fg"><label class="fl">Plan de Atención</label><textarea class="ft" rows="3" placeholder="Plan de tratamiento, indicaciones, control…" onchange="eF('plan','${enc.id}',this.value)">${esc(enc.plan||'')}</textarea></div>
+    </div>
+  `);
+}
+
+function tabInj(enc,pat){
+  const injs=DB.iForPat(pat.id),ci=cycleInfo(pat.id);
+  const rows=[...injs].reverse().map(i=>`<tr>
+    <td>${fmtD(i.date)}</td><td>${BADGE('b-teal',i.eye)}</td>
+    <td class="txt-sm">${esc(i.med)}</td><td class="txt-sm txt2">C${i.cycle}·D${i.dose}</td>
+    <td class="txt-sm">${esc(i.diag||'—')}</td><td>${fmtD(i.nextDate)}</td>
+    <td><button class="btn-icon" onclick='delInj("${i.id}","${pat.id}")'>🗑️</button></td></tr>`).join('');
+  return`<div>
+  ${SEC('Inyecciones Intravítreas ('+injs.length+')','💉',`
+    ${injs.length?`<div class="alert alert-teal mb10">💡 Próxima: <strong>Ciclo ${ci.cycle}, Dosis ${ci.dose}/3</strong> — ${ci.dose===3?'Próxima cita en 90 días':'Próxima cita en 30 días'}</div>`:''}
+    <button class="btn btn-teal btn-sm" style="margin-bottom:12px" onclick='nav("injection-form",{pid:"${pat.id}",eid:null})'>+ Nueva Inyección</button>
+    ${injs.length===0?`<div class="empty-mini">Sin inyecciones registradas para este paciente.</div>`:
+    `<div class="card p0" style="overflow:hidden"><table class="data-table">
+      <thead><tr><th>Fecha</th><th>Ojo</th><th>Medicamento</th><th>C/D</th><th>Diagnóstico</th><th>Próxima Cita</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`}
+  `)}
+  </div>`;
+}
+
+// ══════════════ TAB: CIRUGÍAS (HC) ══════════════
+function tabQx(enc,pat){
+  const sxs=DB.sForPat(pat.id);
+  const sxCards=sxs.map(sx=>{
+    const cs=clStatus(sx);const es=SX_ESTADOS.find(e=>e.v===(sx.estado||'programada'))||SX_ESTADOS[0];
+    return`<div class="sx-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+            <span class="badge b-teal">${esc(sx.eye)}</span>
+            <span class="badge ${esCls(sx.estado)}">${esLabel(sx.estado||'programada')}</span>
+            <span class="txt-m txt-sm">${fmtD(sx.date)}</span>
+          </div>
+          <div style="font-size:12.5px;margin-bottom:4px">
+            <span class="fw7">Procedimientos: </span>
+            ${(sx.procs||[]).length?sx.procs.map(p=>`<span class="badge b-blue" style="margin:1px">${esc(p)}</span>`).join(''):`<span class="txt-m">—</span>`}
+          </div>
+          ${sx.diag?`<div class="txt-sm txt2">Dx: ${esc(sx.diag)}</div>`:''}
+          ${sx.notes?`<div class="txt-sm txt-m" style="margin-top:3px">${esc(sx.notes)}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <span class="badge ${cs.all?'b-green':'b-amber'}">${cs.all?'✅ Listo':'⚠ CL '+cs.done+'/'+cs.total}</span>
+          <button class="btn btn-ghost btn-xs" onclick='nav("surgery-form",{eid:"${sx.id}",pid:"${pat.id}"})'>✏️ Editar</button>
+          <button class="btn-icon" onclick='delSx("${sx.id}","${pat.id}")'>🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return`<div>
+  ${SEC('Cirugías del Paciente ('+sxs.length+')','🔬',`
+    <button class="btn btn-teal btn-sm" style="margin-bottom:12px" onclick='nav("surgery-form",{pid:"${pat.id}",eid:null})'>+ Nueva Cirugía</button>
+    ${sxs.length===0?`<div class="empty-mini">Sin cirugías registradas. <button class="btn-link" onclick='nav("surgery-form",{pid:"${pat.id}",eid:null})'>Registrar →</button></div>`:sxCards}
+  `)}
+  </div>`;
+}
+
+// ══════════════ VIEW: SURGERIES LIST ══════════════
+function vSurgeries(){
+  const all=DB.sAll().sort((a,b)=>b.date.localeCompare(a.date));
+  const pats=DB.pAll();const pN=pid=>{const p=pats.find(x=>x.id===pid);return p?`${p.ln}, ${p.fn}`:'—';};
+  const rows=all.slice(0,60).map(sx=>{
+    const cs=clStatus(sx);const procList=(sx.procs||[]).slice(0,2).map(p=>BADGE('b-blue',p)).join(' ');
+    return`<tr>
+      <td><button class="btn-link" onclick='nav("patient-hc",{pid:"${sx.pid}",tab:"qx"})'>${esc(pN(sx.pid))}</button></td>
+      <td>${fmtD(sx.date)}</td>
+      <td>${BADGE('b-teal',sx.eye)}</td>
+      <td class="txt-sm">${procList}${(sx.procs||[]).length>2?` +${(sx.procs||[]).length-2} más`:''}</td>
+      <td>${BADGE(esCls(sx.estado||'programada'),esLabel(sx.estado||'programada'))}</td>
+      <td>${BADGE(cs.all?'b-green':'b-amber',cs.all?'✅ Listo':'⚠ '+cs.done+'/'+cs.total)}</td>
+      <td>
+        <button class="btn-icon" onclick='nav("surgery-form",{eid:"${sx.id}",pid:"${sx.pid}"})'>✏️</button>
+        <button class="btn-icon" onclick='delSx("${sx.id}",null)'>🗑️</button>
+      </td></tr>`;
+  }).join('');
+  return PH('Cirugías',`${all.length} registros`,`<button class="btn btn-teal" onclick='nav("surgery-form",{pid:null,eid:null})'>+ Nueva Cirugía</button>`)
+  +`<div class="ca">${all.length===0?EMPTY('🔬','Sin cirugías','Registre desde la Historia Clínica del paciente.',`<button class="btn btn-teal" onclick='nav("surgery-form",{pid:null,eid:null})'>+ Nueva</button>`):
+  `<div class="card p0"><table class="data-table">
+    <thead><tr><th>Paciente</th><th>Fecha</th><th>Ojo</th><th>Procedimientos</th><th>Estado</th><th>Checklist</th><th>Acc.</th></tr></thead>
+    <tbody>${rows}</tbody></table>${all.length>60?`<div style="padding:10px;text-align:center;font-size:12px;color:var(--g400)">Mostrando 60 de ${all.length}</div>`:''}</div>`}
+  </div>`;
+}
+
+// ══════════════ VIEW: SURGERY FORM ══════════════
+function vSurgeryForm(){
+  const isEdit=!!S.eid;const ex=isEdit?DB.sxGet(S.eid):null;
+  const pid=S.pid||ex?.pid||null;const pat=pid?DB.pGet(pid):null;
+  const d=ex||{};const cl=d.checklist||{};const cs=clStatus(d);const selProcs=d.procs||[];
+  const allTipos=getSxTipos();
+  const pOpts=DB.pAll().map(p=>`<option value="${p.id}" ${pid===p.id?'selected':''}>${esc(p.ln)}, ${esc(p.fn)} — CI: ${esc(p.cedula)}</option>`).join('');
+  const backBtn=pid?`<button class="btn btn-ghost btn-sm" onclick='nav("patient-hc",{pid:"${pid}",tab:"qx"})'>← Volver</button>`:`<button class="btn btn-ghost btn-sm" onclick='nav("surgeries")'>← Volver</button>`;
+
+  return PH(isEdit?'Editar Cirugía':'Nueva Cirugía',pat?`Paciente: ${esc(pat.ln)}, ${esc(pat.fn)}`:'Complete los datos',backBtn)
+  +`<div class="ca">
+  <div style="display:grid;grid-template-columns:1fr 290px;gap:14px;max-width:940px;align-items:start">
+
+  <!-- FORM PRINCIPAL -->
+  <div class="card pad">
+    <form id="sf" onsubmit="submitSx(event)">
+      <div class="form-sec">Paciente</div>
+      <div class="fg">${pid&&!isEdit?
+        `<div class="form-val">${esc(pat?.ln)}, ${esc(pat?.fn)} — CI: ${esc(pat?.cedula)}</div>
+         <input type="hidden" name="pid" value="${pid}">`:
+        `<label class="fl">Paciente <span class="req">*</span></label>
+         <select name="pid" class="fs" required><option value="">— Seleccionar —</option>${pOpts}</select>`}
+      </div>
+
+      <div class="form-sec" style="margin-top:12px">Datos de la Cirugía</div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Fecha <span class="req">*</span></label>
+          <input class="fi" name="date" type="date" value="${esc(d.date||today())}" required></div>
+        <div class="fg"><label class="fl">Ojo <span class="req">*</span></label>
+          <select class="fs" name="eye" required><option value="">—</option>
+            ${EYES.map(e=>`<option value="${e}" ${(d.eye||'')=== e?'selected':''}>${e}</option>`).join('')}
+          </select></div>
+      </div>
+
+      <!-- MULTI-PROCEDURE SELECTION -->
+      <div class="fg">
+        <label class="fl">Procedimientos <span class="req">*</span><span style="color:var(--g400);font-weight:400;text-transform:none;font-size:10.5px;margin-left:6px">— seleccione uno o más</span></label>
+        <div class="alert alert-info" style="margin-bottom:8px;font-size:12px">💡 Puede seleccionar múltiples procedimientos realizados en la misma cirugía</div>
+        <div class="proc-grid" id="proc-grid">
+          ${allTipos.map(t=>`<label class="proc-item ${selProcs.includes(t.name)?'sel':''}">
+            <input type="checkbox" name="proc" value="${esc(t.name)}" ${selProcs.includes(t.name)?'checked':''}
+              onchange="this.closest('.proc-item').classList.toggle('sel',this.checked)">
+            <span>${esc(t.name)}</span>
+          </label>`).join('')}
+        </div>
+        ${allTipos.length===0?`<div class="alert alert-teal" style="font-size:12px">No hay tipos de cirugía configurados. Agregue uno abajo.</div>`:''}
+        <!-- Add new type inline -->
+        <div style="margin-top:8px">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="showEntAdd('sxt')">+ Agregar tipo de procedimiento</button>
+        </div>
+        <div class="ent-add" id="ea-sxt">
+          <input class="fi fi-sm" id="ea-sxt-val" placeholder="Nombre del procedimiento…" style="flex:1">
+          <button type="button" class="btn btn-teal btn-sm" onclick="confirmSxTipoAdd('sxt','proc-grid')">✓</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="cancelEntAdd('sxt')">✕</button>
+        </div>
+      </div>
+
+      <div class="fg"><label class="fl">Diagnóstico</label>
+        ${diagSel(d.diag||'','sel-sx-d','sx-d')}
+      </div>
+
+      <div class="fg"><label class="fl">Estado de la Cirugía</label>
+        <select class="fs" name="estado">
+          ${SX_ESTADOS.map(e=>`<option value="${e.v}" ${(d.estado||'programada')===e.v?'selected':''}>${e.ico} ${e.l}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="fg"><label class="fl">Notas Quirúrgicas</label>
+        <textarea class="ft" name="notes" rows="3"
+          placeholder="Técnica utilizada, hallazgos intraoperatorios, complicaciones…">${esc(d.notes||'')}</textarea>
+      </div>
+
+      <input type="hidden" name="id" value="${esc(d.id||'')}">
+      <div id="sf-err" style="display:none"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick='${pid?`nav("patient-hc",{pid:"${pid}",tab:"qx"})`:`nav("surgeries")`}'>Cancelar</button>
+        <button type="submit" class="btn btn-teal">${isEdit?'💾 Guardar Cambios':'✅ Registrar Cirugía'}</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- CHECKLIST PREQUIRÚRGICO -->
+  <div>
+    <div class="card pad" style="margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">📋 Checklist Prequirúrgico</div>
+      <div class="cl-status ${cs.all?'ready':'pending'}" id="cl-badge">
+        ${cs.all?'✅ Listo para cirugía':`⚠ ${cs.done}/${cs.total} ítems completados`}
+      </div>
+      <form id="clf">
+        ${CL_ITEMS.map(item=>`<label class="cl-item">
+          <input type="checkbox" name="cl_${item.k}" ${cl[item.k]?'checked':''}
+            onchange="updateClBadge()">
+          <span>${item.l}</span>
+        </label>`).join('')}
+      </form>
+      <button type="button" class="btn btn-ghost btn-sm btn-full" style="margin-top:10px"
+        onclick="saveChecklist('${d.id||''}','${pid||''}')">
+        💾 Guardar Checklist
+      </button>
+    </div>
+
+    <!-- Quick stats if editing -->
+    ${isEdit?`<div class="card pad">
+      <div style="font-size:12px;font-weight:700;color:var(--g500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Resumen</div>
+      <dl class="info-list">
+        <dt>Creado</dt><dd>${fmtD(d.createdAt||today())}</dd>
+        <dt>Ojo</dt><dd>${BADGE('b-teal',d.eye||'—')}</dd>
+        <dt>Estado</dt><dd>${BADGE(esCls(d.estado||'programada'),esLabel(d.estado||'programada'))}</dd>
+        <dt>Checklist</dt><dd>${cs.done}/${cs.total} ítems</dd>
+      </dl>
+    </div>`:''}
+  </div>
+
+  </div></div>`;
+}
+
+function updateClBadge(){
+  const clf=document.getElementById('clf');
+  const done=CL_ITEMS.filter(item=>clf?.querySelector(`[name="cl_${item.k}"]`)?.checked).length;
+  const all=done===CL_ITEMS.length;
+  const b=document.getElementById('cl-badge');
+  if(b){b.className=`cl-status ${all?'ready':'pending'}`;b.textContent=all?'✅ Listo para cirugía':`⚠ ${done}/${CL_ITEMS.length} ítems completados`;}
+}
+
+function submitSx(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const procs=[...document.querySelectorAll('#sf input[name="proc"]:checked')].map(cb=>cb.value);
+  const diagEl=document.getElementById('sel-sx-d');const diagVal=diagEl?diagEl.value:(d.diag||'');
+  const errs=[];
+  if(!d.pid)errs.push('Seleccione un paciente.');
+  if(!d.date)errs.push('La fecha es obligatoria.');
+  if(!d.eye)errs.push('Seleccione el ojo.');
+  if(!procs.length)errs.push('Seleccione al menos un procedimiento.');
+  const errDiv=document.getElementById('sf-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');errDiv.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
+  const clf=document.getElementById('clf');const checklist={};
+  if(clf)CL_ITEMS.forEach(item=>{checklist[item.k]=!!(clf.querySelector(`[name="cl_${item.k}"]`)?.checked);});
+  const sx={
+    id:d.id||genId(),org_id:MY_ORG(),did:MY_DID(),pid:d.pid,
+    date:d.date,eye:d.eye,procs,diag:diagVal||null,
+    estado:d.estado||'programada',checklist,
+    notes:(d.notes||'').trim(),
+    createdAt:d.id?(DB.sxGet(d.id)?.createdAt||today()):today()
+  };
+  DB.sSave(sx);toast('✅ Cirugía registrada correctamente.','success');
+  nav('patient-hc',{pid:sx.pid,tab:'qx'});
+}
+
+function saveChecklist(sxId,pid){
+  if(!sxId){toast('⚠ Guarde la cirugía primero.','warn');return;}
+  const sx=DB.sxGet(sxId);if(!sx)return;
+  const clf=document.getElementById('clf');const checklist={};
+  if(clf)CL_ITEMS.forEach(item=>{checklist[item.k]=!!(clf.querySelector(`[name="cl_${item.k}"]`)?.checked);});
+  DB.sSave({...sx,checklist});
+  updateClBadge();toast('✅ Checklist guardado.','success');
+}
+
+function delSx(id,pid){
+  if(!confirm('¿Eliminar esta cirugía? Esta acción no puede deshacerse.'))return;
+  DB.sDel(id);toast('Cirugía eliminada.','warn');
+  if(pid){const enc=DB.eGet(S.encId)||{};document.getElementById('hc-content').innerHTML=renderTab(enc,DB.pGet(pid));}
+  else{document.getElementById('view').innerHTML=renderView();}
+}
+
+// ══════════════ VIEW: SX FOLLOW-UP ══════════════
+function vSxFollowup(){
+  const sxs=DB.sAll().sort((a,b)=>b.date.localeCompare(a.date));
+  const pats=DB.pAll();const filt=S.sxFilt||'all';
+  const filtered=filt==='all'?sxs:sxs.filter(s=>(s.estado||'programada')===filt);
+  const counts=sxs.reduce((acc,s)=>{const v=s.estado||'programada';acc[v]=(acc[v]||0)+1;return acc;},{});
+  const tabs=[{v:'all',l:'Todas',n:sxs.length},...SX_ESTADOS.map(e=>({v:e.v,l:e.l,n:counts[e.v]||0}))];
+  const rows=filtered.map(sx=>{
+    const p=pats.find(x=>x.id===sx.pid);const cs=clStatus(sx);
+    return`<tr>
+      <td><button class="btn-link" onclick='nav("patient-hc",{pid:"${sx.pid}",tab:"qx"})'>${p?`<strong>${esc(p.ln)}, ${esc(p.fn)}</strong>`:'—'}</button></td>
+      <td class="txt-sm">${p?esc(p.phone):'—'}</td>
+      <td>${fmtD(sx.date)}</td>
+      <td>${BADGE('b-teal',sx.eye)}</td>
+      <td class="txt-sm">${(sx.procs||[]).slice(0,2).join(', ')}${(sx.procs||[]).length>2?` +${(sx.procs||[]).length-2}`:''}</td>
+      <td>${BADGE(esCls(sx.estado||'programada'),esLabel(sx.estado||'programada'))}</td>
+      <td>${BADGE(cs.all?'b-green':'b-amber',cs.all?'✅ Listo':'⚠ '+cs.done+'/'+cs.total)}</td>
+      <td class="txt-sm txt2">${esc(sx.notes||'—')}</td>
+      <td>
+        <select class="fs fi-sm" style="padding:3px 6px;font-size:11.5px"
+          onchange="quickUpdEstado('${sx.id}',this.value)">
+          ${SX_ESTADOS.map(es=>`<option value="${es.v}" ${(sx.estado||'programada')===es.v?'selected':''}>${es.ico} ${es.l}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+  const kpiData=[
+    {l:'Pendiente económico',n:counts.pendiente_economico||0,cls:'amber'},
+    {l:'Programadas',n:counts.programada||0,cls:'blue'},
+    {l:'Realizadas',n:counts.realizada||0,cls:'green'},
+    {l:'Canceladas',n:counts.cancelada||0,cls:'gray'}
+  ];
+  return PH('Seguimiento Quirúrgico',`${sxs.length} cirugía${sxs.length!==1?'s':''} registradas`)
+  +`<div class="ca">
+    <div class="kpi4 mb14">
+      ${kpiData.map(k=>`<div class="kpi-card ${k.cls}"><div class="kv">${k.n}</div><div class="kl">${k.l}</div></div>`).join('')}
+    </div>
+    <div class="ftabs">
+      ${tabs.map(t=>`<button class="ftab ${(S.sxFilt||'all')===t.v?'active':''}"
+        onclick="S.sxFilt='${t.v}';document.getElementById('view').innerHTML=renderView()">
+        ${t.l}<span class="ftab-n">${t.n}</span>
+      </button>`).join('')}
+    </div>
+    ${filtered.length===0?EMPTY('🔬','Sin registros','No hay cirugías para este filtro.'):
+    `<div class="card p0">
+      <table class="data-table">
+        <thead><tr><th>Paciente</th><th>Teléfono</th><th>Fecha</th><th>Ojo</th><th>Procedimientos</th><th>Estado</th><th>Checklist</th><th>Notas</th><th>Cambiar Estado</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`}
+  </div>`;
+}
+function quickUpdEstado(id,estado){const sx=DB.sxGet(id);if(!sx)return;DB.sSave({...sx,estado});toast(`${esLabel(estado)}`, 'success');}
+
+// ══════════════ VIEW: INJECTIONS LIST ══════════════
+function vInjections(){
+  const all=DB.iAll().sort((a,b)=>b.date.localeCompare(a.date));
+  const pats=DB.pAll();const pN=pid=>{const p=pats.find(x=>x.id===pid);return p?`${p.ln}, ${p.fn}`:'—';};
+  const rows=all.slice(0,60).map(i=>`<tr>
+    <td><button class="btn-link" onclick='nav("patient-hc",{pid:"${i.pid}",tab:"inyecciones"})'>${esc(pN(i.pid))}</button></td>
+    <td>${fmtD(i.date)}</td><td>${BADGE('b-teal',i.eye)}</td>
+    <td class="txt-sm">${esc(i.med)}</td><td class="txt-sm txt2">C${i.cycle}D${i.dose}</td>
+    <td>${fmtD(i.nextDate)}</td>
+    <td><button class="btn-icon" onclick='delInj("${i.id}",null)'>🗑️</button></td></tr>`).join('');
+  return PH('Inyecciones Intravítreas',`${all.length} registros`,`<button class="btn btn-teal" onclick='nav("injection-form",{pid:null,eid:null})'>+ Nueva</button>`)
+  +`<div class="ca">${all.length===0?EMPTY('💉','Sin inyecciones','Registre desde la Historia Clínica del paciente.',`<button class="btn btn-teal" onclick='nav("injection-form",{pid:null,eid:null})'>+ Nueva Inyección</button>`):
+  `<div class="card p0"><table class="data-table">
+    <thead><tr><th>Paciente</th><th>Fecha</th><th>Ojo</th><th>Medicamento</th><th>C/D</th><th>Próxima Cita</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table>${all.length>60?`<div style="padding:10px;text-align:center;font-size:12px;color:var(--g400)">Mostrando 60 de ${all.length}</div>`:''}</div>`}
+  </div>`;
+}
+
+// ══════════════ VIEW: INJECTION FORM ══════════════
+function vInjectionForm(){
+  const isEdit=!!S.eid;const ex=isEdit?DB.iGet(S.eid):null;
+  const pid=S.pid||ex?.pid||null;const pat=pid?DB.pGet(pid):null;
+  let ci={cycle:1,dose:1};let sugNext=addDays(today(),30);
+  if(pid&&!isEdit){ci=cycleInfo(pid);sugNext=nextDateFor(today(),ci.dose);}
+  const d=ex||{};
+  const backBtn=pid?`<button class="btn btn-ghost btn-sm" onclick='nav("patient-hc",{pid:"${pid}",tab:"inyecciones"})'>← Volver</button>`:`<button class="btn btn-ghost btn-sm" onclick='nav("injections")'>← Volver</button>`;
+  const pOpts=DB.pAll().map(p=>`<option value="${p.id}" ${pid===p.id?'selected':''}>${esc(p.ln)}, ${esc(p.fn)} — CI: ${esc(p.cedula)}</option>`).join('');
+  return PH(isEdit?'Editar Inyección':'Nueva Inyección Intravítrea',
+    pat?`Paciente: ${esc(pat.ln)}, ${esc(pat.fn)}`:'Seleccione el paciente',backBtn)
+  +`<div class="ca">
+    ${!isEdit&&pid?`<div class="alert alert-teal mb14">💡 <strong>Ciclo ${ci.cycle}, Dosis ${ci.dose}/3.</strong> ${ci.dose===3?'Última dosis del ciclo de carga. Próxima cita en 90 días.':'Próxima cita en 30 días.'} ${ci.dose===1&&ci.cycle>1?'Inicio de nuevo ciclo.':''}</div>`:''}
+    <div class="card pad" style="max-width:620px">
+      <form id="if" onsubmit="submitInj(event)">
+        <div class="form-sec">Paciente</div>
+        <div class="fg">${pid&&!isEdit?
+          `<div class="form-val">${esc(pat?.ln)}, ${esc(pat?.fn)} — CI: ${esc(pat?.cedula)}</div><input type="hidden" name="pid" value="${pid}">`:
+          `<label class="fl">Paciente <span class="req">*</span></label>
+           <select name="pid" class="fs" required onchange="upCycleInfo(this.value)">
+             <option value="">— Seleccionar —</option>${pOpts}</select>`}
+        </div>
+        <div class="form-sec" style="margin-top:12px">Procedimiento</div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Fecha <span class="req">*</span></label><input class="fi" name="date" type="date" value="${esc(d.date||today())}" required max="${today()}"></div>
+          <div class="fg"><label class="fl">Ojo <span class="req">*</span></label>
+            <select class="fs" name="eye" required><option value="">—</option>${EYES.map(e=>`<option value="${e}" ${(d.eye||'')=== e?'selected':''}>${e}</option>`).join('')}</select></div>
+        </div>
+        <div class="fg"><label class="fl">Medicamento <span class="req">*</span></label>
+          <select class="fs" name="med" required><option value="">— Seleccionar —</option>${MEDS.map(m=>`<option value="${esc(m)}" ${(d.med||'')=== m?'selected':''}>${esc(m)}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Diagnóstico</label>
+          <select class="fs" name="diag"><option value="">—</option>${DEF_DIAGS.map(x=>`<option value="${esc(x)}" ${(d.diag||'')=== x?'selected':''}>${esc(x)}</option>`).join('')}</select></div>
+        <div class="form-sec" style="margin-top:12px">Ciclo</div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">N° Ciclo</label><input class="fi" name="cycle" type="number" id="ci-cyc" value="${esc(d.cycle||ci.cycle)}" min="1"></div>
+          <div class="fg"><label class="fl">Dosis</label>
+            <select class="fs" name="dose" id="ci-dos" onchange="upNextDate()">
+              <option value="1" ${(d.dose||ci.dose)===1?'selected':''}>Dosis 1</option>
+              <option value="2" ${(d.dose||ci.dose)===2?'selected':''}>Dosis 2</option>
+              <option value="3" ${(d.dose||ci.dose)===3?'selected':''}>Dosis 3 (fin de ciclo)</option>
+            </select></div>
+        </div>
+        <div class="fg"><label class="fl">Próxima Cita</label>
+          <input class="fi" name="nextDate" id="ci-nxt" type="date" value="${esc(d.nextDate||sugNext)}">
+          <div class="fhint">D1/D2: +30 días · D3: +90 días. Ajuste si es necesario.</div></div>
+        <div class="fg"><label class="fl">Observaciones</label><textarea class="ft" name="notes" rows="2">${esc(d.notes||'')}</textarea></div>
+        <input type="hidden" name="id" value="${esc(d.id||'')}">
+        <div id="if-err" style="display:none"></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick='${pid?`nav("patient-hc",{pid:"${pid}",tab:"inyecciones"})`:`nav("injections")`}'>Cancelar</button>
+          <button type="submit" class="btn btn-teal">${isEdit?'Guardar':'Registrar Inyección'}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+function upCycleInfo(pid){if(!pid)return;const ci=cycleInfo(pid);const c=document.getElementById('ci-cyc'),ds=document.getElementById('ci-dos'),n=document.getElementById('ci-nxt');if(c)c.value=ci.cycle;if(ds)ds.value=ci.dose;if(n)n.value=nextDateFor(today(),ci.dose);}
+function upNextDate(){const dose=parseInt(document.getElementById('ci-dos')?.value||'1');const n=document.getElementById('ci-nxt');if(n)n.value=nextDateFor(today(),dose);}
+function submitInj(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];if(!d.pid)errs.push('Seleccione un paciente.');if(!d.date)errs.push('La fecha es obligatoria.');if(!d.eye)errs.push('Seleccione el ojo.');if(!d.med)errs.push('Seleccione el medicamento.');
+  const errDiv=document.getElementById('if-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
+  const inj={id:d.id||genId(),org_id:MY_ORG(),did:MY_DID(),pid:d.pid,date:d.date,eye:d.eye,med:d.med,diag:d.diag||null,cycle:parseInt(d.cycle)||1,dose:parseInt(d.dose)||1,nextDate:d.nextDate||null,notes:(d.notes||'').trim(),createdAt:d.id?(DB.iGet(d.id)?.createdAt||today()):today()};
+  DB.iSave(inj);toast('✅ Inyección registrada.','success');nav('patient-hc',{pid:inj.pid,tab:'inyecciones'});
+}
+function delInj(id,pid){if(!confirm('¿Eliminar esta inyección?'))return;DB.iDel(id);toast('Inyección eliminada.','warn');if(pid){const enc=DB.eGet(S.encId)||{};document.getElementById('hc-content').innerHTML=renderTab(enc,DB.pGet(pid));}else{document.getElementById('view').innerHTML=renderView();}}
+
+// ══════════════ VIEW: SETTINGS ══════════════
+function vSettings(){
+  const u=getUser(SESSION.uid)||{};
+  return PH('Mi Perfil','Actualice sus datos y contraseña')
+  +`<div class="ca"><div style="max-width:680px">
+    <div class="card pad mb14">
+      <div class="form-sec">Datos del Médico</div>
+      <form id="prf-form" onsubmit="submitProfile(event)">
+        <div class="form-row"><div class="fg"><label class="fl">Nombre Completo <span class="req">*</span></label><input class="fi" name="name" value="${esc(u.name||'')}" required></div>
+          <div class="fg"><label class="fl">Iniciales <span class="req">*</span></label><input class="fi" name="initials" value="${esc(u.initials||'')}" required maxlength="3" oninput="this.value=this.value.toUpperCase()"></div></div>
+        <div class="form-row"><div class="fg"><label class="fl">Especialidad</label><input class="fi" name="spec" value="${esc(u.spec||'')}" placeholder="Retina y Vítreo"></div>
+          <div class="fg"><label class="fl">Clínica</label><input class="fi" name="clinic" value="${esc(u.clinic||'')}"></div></div>
+        <div class="fg"><label class="fl">Email</label><div class="form-val">${esc(u.email||'—')}</div></div>
+        <div id="prf-err" style="display:none"></div>
+        <div class="form-actions"><button type="submit" class="btn btn-teal">💾 Guardar Perfil</button></div>
+      </form>
+    </div>
+    <div class="card pad">
+      <div class="form-sec">Cambiar Contraseña</div>
+      <form id="pwd-form" onsubmit="submitPwd(event)">
+        <div class="form-row"><div class="fg"><label class="fl">Contraseña Actual <span class="req">*</span></label><input class="fi" type="password" name="old_pwd" required></div><div></div></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Nueva Contraseña <span class="req">*</span></label><input class="fi" type="password" name="new_pwd" required minlength="6"></div>
+          <div class="fg"><label class="fl">Confirmar <span class="req">*</span></label><input class="fi" type="password" name="new_pwd2" required></div>
+        </div>
+        <div id="pwd-err" style="display:none"></div>
+        <div class="form-actions"><button type="submit" class="btn btn-ghost">🔐 Cambiar Contraseña</button></div>
+      </form>
+    </div>
+    <!-- CATALOGS -->
+    <div class="grid2" style="margin-top:14px">
+      <div class="card pad">
+        <div class="form-sec">Diagnósticos (${getDiags().length})</div>
+        <div style="display:flex;gap:7px;margin-bottom:10px">
+          <input class="fi fi-sm" id="new-diag-cfg" placeholder="Nuevo diagnóstico…" style="flex:1">
+          <button class="btn btn-teal btn-sm" onclick="addCatalogItem('diag')">+ Agregar</button>
+        </div>
+        <div style="max-height:260px;overflow-y:auto">
+          ${getDiags().map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;font-size:12.5px;transition:.1s" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
+            <span>${esc(d.name)}</span>
+            <button class="btn-icon" onclick="removeCatalogItem('diag','${d.id}')">🗑️</button>
+          </div>`).join('')||`<div class="empty-mini">Sin diagnósticos configurados.</div>`}
+        </div>
+      </div>
+      <div class="card pad">
+        <div class="form-sec">Tipos de Cirugía (${getSxTipos().length})</div>
+        <div style="display:flex;gap:7px;margin-bottom:10px">
+          <input class="fi fi-sm" id="new-sxt-cfg" placeholder="Nuevo tipo de procedimiento…" style="flex:1">
+          <button class="btn btn-teal btn-sm" onclick="addCatalogItem('sxt')">+ Agregar</button>
+        </div>
+        <div style="max-height:260px;overflow-y:auto">
+          ${getSxTipos().map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;font-size:12.5px;transition:.1s" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
+            <span>${esc(t.name)}</span>
+            <button class="btn-icon" onclick="removeCatalogItem('sxt','${t.id}')">🗑️</button>
+          </div>`).join('')||`<div class="empty-mini">Sin tipos configurados.</div>`}
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+}
+async function submitProfile(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];if(!d.name?.trim())errs.push('El nombre es obligatorio.');if(!d.initials?.trim())errs.push('Las iniciales son obligatorias.');
+  const errDiv=document.getElementById('prf-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
+  const u=getUser(SESSION.uid);const updated={...u,name:d.name.trim(),spec:d.spec.trim(),clinic:d.clinic.trim(),initials:d.initials.trim().toUpperCase()};
+  saveUser(updated);setSession(updated);
+  document.getElementById('tb-name').textContent=SESSION.name;document.getElementById('tb-av').textContent=SESSION.initials;
+  toast('✅ Perfil actualizado.','success');errDiv.style.display='none';
+}
+function submitPwd(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];if(!d.old_pwd)errs.push('Ingrese contraseña actual.');if(!d.new_pwd||d.new_pwd.length<6)errs.push('Mínimo 6 caracteres.');if(d.new_pwd!==d.new_pwd2)errs.push('Las contraseñas no coinciden.');
+  const errDiv=document.getElementById('pwd-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
+  const u=getUser(SESSION.uid);const oldHash=hashPwd(d.old_pwd);
+  if(oldHash!==u.pwd){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML='<div>⚠ La contraseña actual es incorrecta.</div>';return;}
+  saveUser({...u,pwd:hashPwd(d.new_pwd)});toast('✅ Contraseña actualizada.','success');e.target.reset();errDiv.style.display='none';
+}
+
+// ══════════════ VIEW: ADMIN ══════════════
+function vAdmin(){
+  const users=getAllUsers();
+  const rows=users.map(u=>{
+    const pc=(sGet('rc_p')||[]).filter(p=>p.did===u.id).length;
+    const rc=u.role==='super_admin'?'role-admin':'role-doctor';
+    const rl=u.role==='super_admin'?'Admin':'Doctor';
+    return`<tr><td><div class="pat-cell">
+      <div class="avatar" style="${u.role==='super_admin'?'background:linear-gradient(135deg,var(--red),var(--orange))':''}">${esc(u.initials||'?')}</div>
+      <div><div class="fw7">${esc(u.name)}</div><div class="txt-m txt-sm">${esc(u.email)}</div></div>
+    </div></td>
+    <td><span class="role-pill ${rc}">${rl}</span></td>
+    <td class="txt-sm">${esc(u.spec||'—')}</td>
+    <td><span class="fw7">${pc}</span> <span class="txt-m txt-sm">pacientes</span></td>
+    <td>${u.id===SESSION.uid?BADGE('b-green','Sesión activa'):`<button class="btn btn-danger btn-xs" onclick="remDoc('${u.id}')">Eliminar</button>`}</td></tr>`;
+  }).join('');
+  return PH('Panel de Administración',`${users.length} usuario${users.length!==1?'s':''}`)
+  +`<div class="ca">
+    <div class="kpi4 mb14">
+      <div class="kpi-card blue"><div class="kv">${users.filter(u=>u.role==='doctor').length}</div><div class="kl">Doctores</div></div>
+      <div class="kpi-card teal"><div class="kv">${(sGet('rc_p')||[]).length}</div><div class="kl">Pacientes en sistema</div></div>
+      <div class="kpi-card green"><div class="kv">${(sGet('rc_s')||[]).length}</div><div class="kl">Cirugías registradas</div></div>
+      <div class="kpi-card amber"><div class="kv">${(sGet('rc_i')||[]).length}</div><div class="kl">Inyecciones</div></div>
+    </div>
+    <div class="card p0 mb14">
+      <div class="card-hdr"><span class="card-hdr-t">Usuarios del Sistema</span>
+        <button class="btn btn-teal btn-sm" onclick="showAddDoc()">+ Agregar Médico</button></div>
+      <table class="data-table"><thead><tr><th>Usuario</th><th>Rol</th><th>Especialidad</th><th>Pacientes</th><th>Acc.</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>
+    <div id="add-doc-wrap" class="card pad" style="display:none;max-width:680px">
+      <div class="form-sec">Nuevo Médico / Usuario</div>
+      <form id="add-doc" onsubmit="submitAddDoc(event)">
+        <div class="form-row"><div class="fg"><label class="fl">Nombre <span class="req">*</span></label><input class="fi" name="name" required></div>
+          <div class="fg"><label class="fl">Iniciales <span class="req">*</span></label><input class="fi" name="initials" required maxlength="3" oninput="this.value=this.value.toUpperCase()"></div></div>
+        <div class="form-row"><div class="fg"><label class="fl">Especialidad</label><input class="fi" name="spec" placeholder="Retina y Vítreo"></div>
+          <div class="fg"><label class="fl">Clínica</label><input class="fi" name="clinic"></div></div>
+        <div class="form-row"><div class="fg"><label class="fl">Email <span class="req">*</span></label><input class="fi" name="email" type="email" required></div>
+          <div class="fg"><label class="fl">Rol</label><select class="fs" name="role"><option value="doctor">Doctor</option><option value="super_admin">Super Admin</option></select></div></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Contraseña <span class="req">*</span></label><input class="fi" type="password" name="pwd" required minlength="6"></div>
+          <div class="fg"><label class="fl">Confirmar <span class="req">*</span></label><input class="fi" type="password" name="pwd2" required></div>
+        </div>
+        <div id="add-doc-err" style="display:none"></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('add-doc-wrap').style.display='none'">Cancelar</button>
+          <button type="submit" class="btn btn-teal">Crear Usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+function showAddDoc(){const el=document.getElementById('add-doc-wrap');if(el){el.style.display='block';el.scrollIntoView({behavior:'smooth'});}}
+function submitAddDoc(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];if(!d.name?.trim())errs.push('El nombre es obligatorio.');if(!d.email?.trim())errs.push('El email es obligatorio.');if(!d.pwd||d.pwd.length<6)errs.push('Contraseña mínimo 6 caracteres.');if(d.pwd!==d.pwd2)errs.push('Las contraseñas no coinciden.');if(getUserByEmail(d.email))errs.push(`Email ${esc(d.email)} ya registrado.`);
+  const errDiv=document.getElementById('add-doc-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
+  saveUser({id:genId(),org_id:MY_ORG(),email:d.email.trim().toLowerCase(),name:d.name.trim(),initials:(d.initials||d.name.substring(0,2)).toUpperCase(),spec:d.spec.trim(),clinic:d.clinic.trim(),role:d.role||'doctor',pwd:hashPwd(d.pwd),createdAt:today(),active:true});
+  toast(`✅ Usuario creado.`,'success');document.getElementById('view').innerHTML=renderView();
+}
+function remDoc(uid){
+  const u=getUser(uid);if(!u||!confirm(`¿Eliminar a ${u.name}?`))return;
+  deleteUser(uid);toast(`Usuario eliminado.`,'warn');document.getElementById('view').innerHTML=renderView();
+}
+function delPat(id){const p=DB.pGet(id);if(!p||!confirm(`¿Eliminar a ${p.ln}, ${p.fn}?`))return;DB.pDel(id);toast('Paciente eliminado.','warn');nav('patients',{pid:null});}
+
+// ══════════════ PENDIENTE TOGGLE ══════════════
+function togglePendiente(pid,state){
+  const p=DB.pGet(pid);if(!p)return;
+  if(state){
+    const nota=prompt('Nota para el pendiente (opcional):','');
+    DB.pSave({...p,pendiente:true,nota_pendiente:(nota||'').trim()});
+    toast('⚠ Paciente marcado como pendiente.','warn');
+  } else {
+    DB.pSave({...p,pendiente:false,nota_pendiente:''});
+    toast('✅ Pendiente resuelto.','success');
+  }
+  nav('patient-hc',{pid,encId:S.encId,tab:S.tab});
+}
+
+// ══════════════ VIEW: AGENDA ══════════════
+function vAgenda(){
+  const td=today();const pats=DB.pAll();const citas=DB.citaAll();
+  const tab=S.agendaTab||'hoy';
+  // --- HOY ---
+  const citasHoy=citas.filter(c=>c.date===td&&c.estado==='programada').sort((a,b)=>a.time.localeCompare(b.time));
+  // --- PENDIENTES ---
+  const pendientes=pats.filter(p=>p.pendiente);
+  // --- SEGUIMIENTO (inyecciones) ---
+  const withSt=pats.map(p=>({...p,st:patStatus(p.id)}));
+  const muyAtrasados=withSt.filter(p=>p.st.status==='muy-atrasado').sort((a,b)=>a.st.daysUntil-b.st.daysUntil);
+  const atrasados=withSt.filter(p=>p.st.status==='atrasado').sort((a,b)=>a.st.daysUntil-b.st.daysUntil);
+  const estaSemana=withSt.filter(p=>p.st.status==='esta-semana').sort((a,b)=>a.st.daysUntil-b.st.daysUntil);
+  const proximos=withSt.filter(p=>p.st.status==='proximo').sort((a,b)=>a.st.daysUntil-b.st.daysUntil);
+  const urgentes=muyAtrasados.length+atrasados.length;
+  // --- PRÓXIMAS CITAS ---
+  const proxCitas=citas.filter(c=>c.date>td&&c.estado==='programada').sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')).slice(0,30);
+  // KPIs
+  const citasHoyCount=citasHoy.length;
+  const pname=pid=>{const p=pats.find(x=>x.id===pid);return p?`${p.ln}, ${p.fn}`:'—';};
+  // Tab counts
+  const TABS=[
+    {k:'hoy',   l:'Hoy',        n:citasHoyCount,  cls:citasHoyCount?'':'ok'},
+    {k:'pendientes',l:'Pendientes',n:pendientes.length,cls:pendientes.length?'warn':'ok'},
+    {k:'seguimiento',l:'Seguimiento IVT',n:urgentes,cls:urgentes?'':'ok'},
+    {k:'proximas',l:'Próximas Citas',n:proxCitas.length,cls:''}
+  ];
+  // Day display
+  const d=new Date();
+  const dayName=DAYS[d.getDay()];
+  const monthName=MNAMES[d.getMonth()];
+
+  // Render tab content
+  let content='';
+  if(tab==='hoy'){
+    content=`
+      <div class="day-header">
+        <div class="day-circle"><div class="day-num">${d.getDate()}</div><div class="day-mon">${MNAMES[d.getMonth()].substring(0,3).toUpperCase()}</div></div>
+        <div class="day-info">
+          <div class="day-title">${dayName} ${d.getDate()} de ${monthName} de ${d.getFullYear()}</div>
+          <div class="day-sub">${citasHoyCount} cita${citasHoyCount!==1?'s':''} programada${citasHoyCount!==1?'s':''} para hoy${urgentes?` · ${urgentes} paciente${urgentes!==1?'s':''} con seguimiento vencido`:''}</div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick='nav("cita-form",{pid:null,eid:null})'>+ Nueva Cita</button>
+      </div>
+      ${urgentes>0?`<div class="alert-block red" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="S.agendaTab='seguimiento';document.getElementById('view').innerHTML=renderView()">
+        <span style="font-size:18px">🚨</span>
+        <div><strong>${urgentes} paciente${urgentes!==1?'s':''}</strong> con inyecciones vencidas requieren atención urgente.
+        <span style="color:var(--blue);font-weight:600;margin-left:6px">Ver seguimiento →</span></div>
+      </div>`:''}
+      ${citasHoy.length===0?`<div class="card pad" style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:10px">📅</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:5px">Sin citas programadas para hoy</div>
+        <div style="font-size:12.5px;color:var(--g400);margin-bottom:14px">Puede agregar una cita o consultar el seguimiento de inyecciones.</div>
+        <button class="btn btn-teal" onclick='nav("cita-form",{pid:null,eid:null})'>+ Programar Cita</button>
+      </div>`:citasHoy.map(c=>{
+        const p=pats.find(x=>x.id===c.pid);const tipo=CITA_TIPOS.find(t=>t.v===c.tipo)||CITA_TIPOS[0];
+        return`<div class="cita-card hoy" onclick='nav("patient-hc",{pid:"${c.pid}",tab:"enf-antec"})'>
+          <div class="cita-time">${c.time||'—'}</div>
+          <div style="font-size:20px;flex-shrink:0">${tipo.ico}</div>
+          <div class="cita-info">
+            <div class="cita-name">${p?`${esc(p.ln)}, ${esc(p.fn)}`:'—'}</div>
+            <div class="cita-meta">${tipo.l}${c.notas?` · ${esc(c.notas)}`:''}</div>
+            ${p?.diag?`<div class="cita-meta">${esc(p.diag)}</div>`:''}
+          </div>
+          <div class="cita-actions" onclick="event.stopPropagation()">
+            ${BADGE('b-blue','Programada')}
+            <button class="btn btn-teal btn-xs" onclick='markCitaAtendida("${c.id}")'>✓ Atendida</button>
+            <button class="btn-icon" onclick='nav("cita-form",{eid:"${c.id}",pid:"${c.pid}"})'>✏️</button>
+            <button class="btn-icon" onclick='delCita("${c.id}")'>🗑️</button>
+          </div>
+        </div>`;
+      }).join('')}`;
+
+  } else if(tab==='pendientes'){
+    content=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div><div style="font-size:15px;font-weight:700">Pacientes Pendientes (${pendientes.length})</div>
+        <div style="font-size:12px;color:var(--g500)">Pacientes marcados para seguimiento o reagendamiento</div></div>
+        <button class="btn btn-teal btn-sm" onclick='nav("cita-form",{pid:null,eid:null})'>+ Nueva Cita</button>
+      </div>
+      ${pendientes.length===0?`<div class="card pad" style="text-align:center;padding:40px">
+        <div style="font-size:32px;margin-bottom:8px">✅</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Sin pendientes</div>
+        <div style="font-size:12.5px;color:var(--g400)">No hay pacientes marcados como pendientes.</div>
+      </div>`:pendientes.map(p=>{
+        const st=patStatus(p.id);const nc=DB.citaForPat(p.id).filter(c=>c.date>=td&&c.estado==='programada');
+        return`<div class="cita-card pendiente" onclick='nav("patient-hc",{pid:"${p.id}",tab:"enf-antec"})'>
+          <div class="avatar">${esc(p.fn[0]||'?')}${esc(p.ln[0]||'?')}</div>
+          <div class="cita-info">
+            <div class="cita-name">⚠ ${esc(p.ln)}, ${esc(p.fn)}</div>
+            <div class="cita-meta">${p.nota_pendiente?esc(p.nota_pendiente):'Sin nota'} · CI: ${esc(p.cedula)} · ${esc(p.phone)}</div>
+            <div class="cita-meta" style="margin-top:2px">${BADGE(st.cls,st.label)}${nc.length?` · Próxima cita: ${fmtD(nc[0].date)}`:' · Sin cita programada'}</div>
+          </div>
+          <div class="cita-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-teal btn-xs" onclick='nav("cita-form",{pid:"${p.id}",eid:null})'>📅 Citar</button>
+            <button class="btn btn-ghost btn-xs" onclick="togglePendiente('${p.id}',false)">✓ Resolver</button>
+          </div>
+        </div>`;
+      }).join('')}`;
+
+  } else if(tab==='seguimiento'){
+    const fuRow=(p,cls)=>`<div class="fu-row ${cls}" onclick='nav("patient-hc",{pid:"${p.id}",tab:"inyecciones"})'>
+      <div>
+        <div class="fu-days" style="color:${cls==='muy-atrasado'?'var(--red)':cls==='atrasado'?'var(--amber)':cls==='esta-semana'?'var(--orange)':'var(--blue)'}">${p.st.daysUntil<0?Math.abs(p.st.daysUntil):p.st.daysUntil}</div>
+        <div style="font-size:9px;text-align:center;color:var(--g500)">${p.st.daysUntil<0?'días':'días'}</div>
+      </div>
+      <div style="flex:1">
+        <div class="fu-name">${esc(p.ln)}, ${esc(p.fn)}</div>
+        <div class="fu-meta">${esc(p.diag||'—')} · CI: ${esc(p.cedula)} · ${esc(p.phone)}</div>
+        <div class="fu-meta" style="margin-top:2px">
+          Próxima: <strong>${fmtD(p.st.next)}</strong> · ${p.st.daysUntil<0?`Vencida hace ${Math.abs(p.st.daysUntil)} días`:`En ${p.st.daysUntil} días`}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()" style="display:flex;gap:5px;flex-shrink:0">
+        <button class="btn btn-teal btn-xs" onclick='nav("injection-form",{pid:"${p.id}",eid:null})'>💉 Registrar</button>
+        <button class="btn btn-ghost btn-xs" onclick='nav("cita-form",{pid:"${p.id}",eid:null})'>📅 Citar</button>
+      </div>
+    </div>`;
+    content=`
+      <div class="kpi4 mb14">
+        <div class="kpi-card red"><div class="kv">${muyAtrasados.length}</div><div class="kl">Muy atrasados (+30d)</div></div>
+        <div class="kpi-card amber"><div class="kv">${atrasados.length}</div><div class="kl">Atrasados</div></div>
+        <div class="kpi-card" style="border-top-color:var(--orange)"><div class="kv">${estaSemana.length}</div><div class="kl">Esta semana</div></div>
+        <div class="kpi-card blue"><div class="kv">${proximos.length}</div><div class="kl">Próximos 30 días</div></div>
+      </div>
+      ${muyAtrasados.length?`<div class="sh"><span class="sh-t">🚨 Muy Atrasados — más de 30 días vencidos</span><div class="sh-d"></div></div>${muyAtrasados.map(p=>fuRow(p,'muy-atrasado')).join('')}`:''}
+      ${atrasados.length?`<div class="sh" style="margin-top:10px"><span class="sh-t">⚠️ Atrasados</span><div class="sh-d"></div></div>${atrasados.map(p=>fuRow(p,'atrasado')).join('')}`:''}
+      ${estaSemana.length?`<div class="sh" style="margin-top:10px"><span class="sh-t">🔔 Esta Semana</span><div class="sh-d"></div></div>${estaSemana.map(p=>fuRow(p,'esta-semana')).join('')}`:''}
+      ${proximos.length?`<div class="sh" style="margin-top:10px"><span class="sh-t">📅 Próximos 30 días</span><div class="sh-d"></div></div>${proximos.map(p=>fuRow(p,'proximo')).join('')}`:''}
+      ${(muyAtrasados.length+atrasados.length+estaSemana.length+proximos.length)===0?`<div class="card pad" style="text-align:center;padding:40px">
+        <div style="font-size:32px;margin-bottom:8px">✅</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Todo al día</div>
+        <div style="font-size:12.5px;color:var(--g400)">No hay pacientes con inyecciones vencidas o próximas.</div>
+      </div>`:''}`;
+
+  } else if(tab==='proximas'){
+    const byDate=proxCitas.reduce((acc,c)=>{acc[c.date]=acc[c.date]||[];acc[c.date].push(c);return acc;},{});
+    content=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div><div style="font-size:15px;font-weight:700">Próximas Citas</div>
+        <div style="font-size:12px;color:var(--g500)">${proxCitas.length} cita${proxCitas.length!==1?'s':''} programada${proxCitas.length!==1?'s':''}</div></div>
+        <button class="btn btn-teal btn-sm" onclick='nav("cita-form",{pid:null,eid:null})'>+ Nueva Cita</button>
+      </div>
+      ${proxCitas.length===0?`<div class="card pad" style="text-align:center;padding:40px">
+        <div style="font-size:32px;margin-bottom:8px">📅</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Sin citas próximas</div>
+        <div style="font-size:12.5px;color:var(--g400);margin-bottom:14px">No hay citas programadas a futuro.</div>
+        <button class="btn btn-teal" onclick='nav("cita-form",{pid:null,eid:null})'>+ Programar Cita</button>
+      </div>`:Object.entries(byDate).map(([date,dayCitas])=>`
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g500);letter-spacing:.6px;margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--g200)">${fmtD(date)} — ${DAYS[new Date(date+'T12:00:00').getDay()]}</div>
+          ${dayCitas.map(c=>{
+            const p=pats.find(x=>x.id===c.pid);const tipo=CITA_TIPOS.find(t=>t.v===c.tipo)||CITA_TIPOS[0];
+            return`<div class="cita-card programada" onclick='nav("patient-hc",{pid:"${c.pid}",tab:"enf-antec"})'>
+              <div class="cita-time" style="font-size:13px">${c.time||'—'}</div>
+              <div style="font-size:18px;flex-shrink:0">${tipo.ico}</div>
+              <div class="cita-info">
+                <div class="cita-name">${p?`${esc(p.ln)}, ${esc(p.fn)}`:'—'}</div>
+                <div class="cita-meta">${tipo.l}${c.notas?` · ${esc(c.notas)}`:''}</div>
+              </div>
+              <div class="cita-actions" onclick="event.stopPropagation()">
+                <button class="btn-icon" onclick='nav("cita-form",{eid:"${c.id}",pid:"${c.pid}"})'>✏️</button>
+                <button class="btn-icon" onclick='delCita("${c.id}")'>🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`).join('')}`;
+  }
+
+  return PH('Agenda',`${dayName} ${d.getDate()} de ${monthName} · ${SESSION.name}`)
+  +`<div style="background:var(--white);border-bottom:1px solid var(--g200)">
+    <div class="agenda-tabs">
+      ${TABS.map(t=>`<button class="agenda-tab ${tab===t.k?'active':''}" onclick="S.agendaTab='${t.k}';document.getElementById('view').innerHTML=renderView()">
+        ${t.l}${t.n?`<span class="agenda-tab-n ${t.cls}">${t.n}</span>`:''}
+      </button>`).join('')}
+    </div>
+  </div>
+  <div class="ca">${content}</div>`;
+}
+
+// ══════════════ VIEW: CITA FORM ══════════════
+function vCitaForm(){
+  const isEdit=!!S.eid;const ex=isEdit?DB.citaAll().find(c=>c.id===S.eid):null;
+  const pid=S.pid||ex?.pid||null;const pat=pid?DB.pGet(pid):null;
+  const d=ex||{};
+  const pOpts=DB.pAll().map(p=>`<option value="${p.id}" ${pid===p.id?'selected':''}>${esc(p.ln)}, ${esc(p.fn)} — CI: ${esc(p.cedula)}</option>`).join('');
+  const backBtn=pid?`<button class="btn btn-ghost btn-sm" onclick='nav("patient-hc",{pid:"${pid}",tab:"enf-antec"})'>← Volver</button>`:`<button class="btn btn-ghost btn-sm" onclick='nav("agenda",{agendaTab:"hoy"})'>← Volver</button>`;
+
+  return PH(isEdit?'Editar Cita':'Nueva Cita',
+    pat?`Paciente: ${esc(pat.ln)}, ${esc(pat.fn)}`:'Seleccione el paciente',backBtn)
+  +`<div class="ca"><div class="card pad" style="max-width:560px">
+    <form id="cf" onsubmit="submitCita(event)">
+      <div class="form-sec">Paciente</div>
+      <div class="fg">${pid&&!isEdit?
+        `<div class="form-val">${esc(pat?.ln)}, ${esc(pat?.fn)} — CI: ${esc(pat?.cedula)}</div><input type="hidden" name="pid" value="${pid}">`:
+        `<label class="fl">Paciente <span class="req">*</span></label>
+         <select name="pid" class="fs" required><option value="">— Seleccionar —</option>${pOpts}</select>`}
+      </div>
+      <div class="form-sec" style="margin-top:12px">Datos de la Cita</div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Fecha <span class="req">*</span></label>
+          <input class="fi" name="date" type="date" value="${esc(d.date||today())}" required></div>
+        <div class="fg"><label class="fl">Hora</label>
+          <input class="fi" name="time" type="time" value="${esc(d.time||'')}"></div>
+      </div>
+      <div class="fg"><label class="fl">Tipo de Cita</label>
+        <select class="fs" name="tipo">
+          ${CITA_TIPOS.map(t=>`<option value="${t.v}" ${(d.tipo||'consulta')===t.v?'selected':''}>${t.ico} ${t.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Estado</label>
+        <select class="fs" name="estado">
+          ${CITA_ESTADOS.map(e=>`<option value="${e.v}" ${(d.estado||'programada')===e.v?'selected':''}>${e.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Notas / Motivo</label>
+        <textarea class="ft" name="notas" rows="2"
+          placeholder="Ej: control post-inyección, traer resultados de laboratorio…">${esc(d.notas||'')}</textarea>
+      </div>
+      <input type="hidden" name="id" value="${esc(d.id||'')}">
+      <div id="cf-err" style="display:none"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick='${pid?`nav("patient-hc",{pid:"${pid}",tab:"enf-antec"})`:`nav("agenda",{agendaTab:"hoy"})`}'>Cancelar</button>
+        <button type="submit" class="btn btn-teal">${isEdit?'💾 Guardar Cambios':'📅 Agendar Cita'}</button>
+      </div>
+    </form>
+  </div></div>`;
+}
+function submitCita(e){
+  e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  const errs=[];if(!d.pid)errs.push('Seleccione un paciente.');if(!d.date)errs.push('La fecha es obligatoria.');
+  const errDiv=document.getElementById('cf-err');
+  if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
+  const isNew=!d.id;
+  const cita={id:d.id||genId(),org_id:MY_ORG(),did:MY_DID(),pid:d.pid,date:d.date,time:d.time||'',tipo:d.tipo||'consulta',estado:d.estado||'programada',notas:(d.notas||'').trim(),createdAt:d.id?undefined:today()};
+  DB.citaSave(cita);
+  toast(`✅ Cita ${isNew?'agendada':'actualizada'} para ${fmtD(d.date)}.`,'success');
+  // If patient was pending, option to resolve
+  const p=DB.pGet(d.pid);
+  if(p?.pendiente && isNew && confirm(`${esc(p.ln)}, ${esc(p.fn)} está marcado como pendiente.\n¿Marcar como resuelto ahora que tiene cita agendada?`)){
+    DB.pSave({...p,pendiente:false,nota_pendiente:''});
+  }
+  nav(d.pid?'patient-hc':'agenda',d.pid?{pid:d.pid,tab:'enf-antec'}:{agendaTab:'hoy'});
+}
+function markCitaAtendida(id){
+  const c=DB.citaAll().find(x=>x.id===id);if(!c)return;
+  DB.citaSave({...c,estado:'atendida'});toast('✅ Cita marcada como atendida.','success');
+  document.getElementById('view').innerHTML=renderView();
+}
+function delCita(id){
+  if(!confirm('¿Eliminar esta cita?'))return;
+  DB.citaDel(id);toast('Cita eliminada.','warn');document.getElementById('view').innerHTML=renderView();
+}
+
+// ══════════════ NOTIFICATION BADGE ══════════════
+function updateNotifBadge(){
+  const pats=DB.pAll();
+  const urgentes=pats.filter(p=>{const st=patStatus(p.id);return st.status==='muy-atrasado'||st.status==='atrasado';}).length;
+  const pendientes=pats.filter(p=>p.pendiente).length;
+  const total=urgentes+pendientes;
+  const dot=document.getElementById('notif-dot');
+  if(dot){dot.style.display=total?'flex':'none';dot.textContent=total>9?'9+':String(total);}
+}
+
+// ══════════════════════════════════════════
+// PRINT ENGINE
+// ══════════════════════════════════════════
+
+// ── Helpers ──
+const pEsc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const pVal  = (v,fallback='—') => v ? pEsc(v) : `<span style="color:#a0aec0">${fallback}</span>`;
+const pRow  = (lbl,val) => `<div class="p-row"><div class="p-row-label">${lbl}</div><div class="p-row-val">${val}</div></div>`;
+const pBox  = (v) => v ? `<span class="p-cl-box checked">✓</span>` : `<span class="p-cl-box"></span>`;
+
+function printHeader(pat){
+  const u = getUser(SESSION.uid)||{};
+  return `<div class="p-hdr">
+    <div class="p-hdr-left">
+      <div class="p-logo">RC</div>
+      <div>
+        <div class="p-clinic">${pEsc(u.clinic||'RetinaClinics HC')}</div>
+        <div class="p-spec">${pEsc(u.name||SESSION.name)} · ${pEsc(u.spec||SESSION.spec)}</div>
+      </div>
+    </div>
+    <div class="p-hdr-right">
+      <strong>${pEsc(u.name||SESSION.name)}</strong>
+      ${pEsc(u.spec||SESSION.spec)}<br>
+      Fecha: ${fmtD(today())}
+    </div>
+  </div>`;
+}
+
+function printPatBanner(pat){
+  const age = calcAge(pat.bd);
+  return `<div class="p-pat-banner">
+    <div>
+      <div class="p-pat-name">${pEsc(pat.ln)}, ${pEsc(pat.fn)}</div>
+      <div class="p-pat-meta">CI: ${pEsc(pat.cedula)} · ${pEsc(pat.phone)}${pat.email?` · ${pEsc(pat.email)}`:''}</div>
+      <div class="p-pat-meta" style="margin-top:3px">${pat.diag?`Dx: ${pEsc(pat.diag)}`:''}</div>
+    </div>
+    <div class="p-pat-right">
+      <strong>${age||'—'}</strong>años
+      <div style="margin-top:3px">${pat.sex==='M'?'Masculino':pat.sex==='F'?'Femenina':'—'}</div>
+      ${pat.bd?`<div>F. Nac: ${fmtD(pat.bd)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function printFooter(label){
+  return `<div class="p-foot">
+    <span>RetinaClinics HC · Sistema Clínico</span>
+    <span>${label}</span>
+    <span>Impreso: ${fmtD(today())}</span>
+  </div>`;
+}
+
+function printSig(){
+  const u = getUser(SESSION.uid)||{};
+  return `<div class="p-sig">
+    <div class="p-sig-box">
+      <div class="p-sig-line"></div>
+      <div class="p-sig-name">${pEsc(u.name||SESSION.name)}</div>
+      <div class="p-sig-spec">${pEsc(u.spec||SESSION.spec)}</div>
+    </div>
+  </div>`;
+}
+
+// ── PRINT: HISTORIA CLÍNICA (una consulta) ──
+function printHC(encId, pid){
+  const enc = DB.eGet(encId);
+  const pat = DB.pGet(pid);
+  if(!enc||!pat){ toast('⚠ No se encontró la consulta.','error'); return; }
+  const age = calcAge(pat.bd);
+  const av  = enc.av_sc||{}, cc=enc.av_cc||{}, kM=enc.kM||{}, sb=enc.subj||{};
+  const pu  = enc.pu||{};
+  const ant = enc.ant||{};
+  const dxList = enc.dx_list||[];
+  const pio = enc.pio||[];
+
+  // Optometry table helper
+  const oRow = (eye, sc, ph, vc, ccE, ccC, ccJ, ccA, sbE, sbC, sbJ, sbA, sbAdd) =>
+    `<tr>
+      <td class="eye-lbl">${eye}</td>
+      <td>${pVal(sc)}</td><td>${pVal(ph)}</td><td>${pVal(vc)}</td>
+      <td>${pVal(ccE)}</td><td>${pVal(ccC)}</td><td>${pVal(ccJ)}</td><td>${pVal(ccA)}</td>
+      <td>${pVal(sbE)}</td><td>${pVal(sbC)}</td><td>${pVal(sbJ)}</td><td>${pVal(sbA)}</td><td>${pVal(sbAdd)}</td>
+    </tr>`;
+
+  document.getElementById('print-area').innerHTML = `<div class="print-doc">
+    ${printHeader(pat)}
+    ${printPatBanner(pat)}
+
+    <!-- Encounter info bar -->
+    <div style="display:flex;align-items:center;gap:16px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:5px;padding:8px 12px;margin-bottom:12px;font-size:11px">
+      <div><span style="color:#718096;font-size:9.5px;text-transform:uppercase;font-weight:700">Fecha</span><br><strong>${fmtD(enc.date)}</strong> ${enc.time||''}</div>
+      <div><span style="color:#718096;font-size:9.5px;text-transform:uppercase;font-weight:700">Tipo</span><br><strong>${pEsc(enc.type||'Consulta')}</strong></div>
+      <div><span style="color:#718096;font-size:9.5px;text-transform:uppercase;font-weight:700">Médico</span><br><strong>${pEsc(SESSION.name)}</strong></div>
+    </div>
+
+    <!-- SECCIÓN: Enfermedad Actual -->
+    ${enc.enf_actual ? `<div class="p-section">
+      <div class="p-section-title">Motivo de Consulta / Enfermedad Actual</div>
+      <div class="p-textbox">${pEsc(enc.enf_actual)}</div>
+    </div>` : ''}
+
+    <!-- SECCIÓN: Antecedentes Sistémicos -->
+    <div class="p-section">
+      <div class="p-section-title">Antecedentes Sistémicos</div>
+      <div class="p-ant-grid">
+        ${ANT_SIS.map(a=>`<div class="p-ant-item">${pBox(ant[a.k])} <span>${a.l}</span></div>`).join('')}
+      </div>
+      ${(enc.obs_ant||enc.farm_ant||enc.qx_ant)?`<div class="p-2col" style="margin-top:6px">
+        ${enc.obs_ant?`<div>${pRow('Observaciones',pEsc(enc.obs_ant))}</div>`:'<div></div>'}
+        ${enc.farm_ant?`<div>${pRow('Farmacológicos',pEsc(enc.farm_ant))}</div>`:'<div></div>'}
+      </div>`:''}
+    </div>
+
+    <!-- SECCIÓN: Antecedentes Oftalmológicos -->
+    ${(enc.uso_cc||enc.qx_oftalmo||enc.uso_gotas||enc.trauma_oftalmo)?`<div class="p-section">
+      <div class="p-section-title">Antecedentes Oftalmológicos</div>
+      <div class="p-2col">
+        <div>${pRow('Uso Corrección',pVal(enc.uso_cc))}${pRow('Cirugías Oculares',pVal(enc.qx_oftalmo))}</div>
+        <div>${pRow('Uso de Gotas',pVal(enc.uso_gotas))}${pRow('Trauma Ocular',pVal(enc.trauma_oftalmo))}</div>
+      </div>
+    </div>`:''}
+
+    <!-- SECCIÓN: Optometría -->
+    <div class="p-section">
+      <div class="p-section-title">Optometría</div>
+      <table class="p-table" style="font-size:9.5px">
+        <thead><tr>
+          <th>—</th><th>AV SC</th><th>PH</th><th>VC</th>
+          <th>Esf CC</th><th>Cil CC</th><th>Eje CC</th><th>AV CC</th>
+          <th>Esf Sub</th><th>Cil Sub</th><th>Eje Sub</th><th>AV Sub</th><th>ADD</th>
+        </tr></thead>
+        <tbody>
+          ${oRow('OD',av.od,av.od_ph,av.od_vc,cc.od_esf,cc.od_cil,cc.od_eje,cc.od_av,sb.od_esf,sb.od_cil,sb.od_eje,sb.od_av,sb.od_add)}
+          ${oRow('OI',av.oi,av.oi_ph,av.oi_vc,cc.oi_esf,cc.oi_cil,cc.oi_eje,cc.oi_av,sb.oi_esf,sb.oi_cil,sb.oi_eje,sb.oi_av,sb.oi_add)}
+        </tbody>
+      </table>
+      ${(enc.dip||enc.opto_obs)?`<div style="display:flex;gap:16px;font-size:10.5px">${enc.dip?`${pRow('DIP',pEsc(enc.dip))}`:''}${enc.opto_obs?`${pRow('Observaciones',pEsc(enc.opto_obs))}`:''}
+      </div>`:''}
+    </div>
+
+    <!-- SECCIÓN: Examen Ocular -->
+    <div class="p-section">
+      <div class="p-section-title">Examen Ocular</div>
+      <div class="p-3col">
+        <div>${pRow('Hirschberg',pVal(enc.hirschberg,'CENTRADO.'))}</div>
+        <div>${pRow('Ducciones',pVal(enc.ducciones,'NORMALES.'))}</div>
+        <div>${pRow('Cover Test',pVal(enc.cover_test,'ORTOFORIA.'))}</div>
+      </div>
+      <table class="p-table" style="margin-bottom:6px">
+        <thead><tr><th>Pupila</th><th>Tamaño</th><th>Forma</th><th>Contracción</th><th>Acomodación</th><th>Marcus Gunn</th></tr></thead>
+        <tbody>
+          <tr><td class="eye-lbl">OD</td><td>${pVal(pu.od_t,'4')}</td><td>${pVal(pu.od_f,'+')}</td><td>${pVal(pu.od_c,'+')}</td><td>${pVal(pu.od_a,'+')}</td><td>${pVal(pu.od_mg,'-')}</td></tr>
+          <tr><td class="eye-lbl">OI</td><td>${pVal(pu.oi_t,'4')}</td><td>${pVal(pu.oi_f,'+')}</td><td>${pVal(pu.oi_c,'+')}</td><td>${pVal(pu.oi_a,'+')}</td><td>${pVal(pu.oi_mg,'-')}</td></tr>
+        </tbody>
+      </table>
+      ${enc.externo?pRow('Examen Externo',pEsc(enc.externo)):''}
+    </div>
+
+    <!-- SECCIÓN: Biomicroscopía / PIO / Retina -->
+    <div class="p-section">
+      <div class="p-section-title">Biomicroscopía · Presión Ocular · Retina y Vítreo</div>
+      ${enc.biomicroscopia?`<div class="p-textbox">${pEsc(enc.biomicroscopia)}</div>`:''}
+      ${enc.cristalino?pRow('Cristalino',pEsc(enc.cristalino)):''}
+      ${pio.length?`<table class="p-table" style="margin-top:6px">
+        <thead><tr><th>Fecha</th><th>Hora</th><th>OD</th><th>OI</th><th>Paqui OD</th><th>Paqui OI</th></tr></thead>
+        <tbody>${pio.map(r=>`<tr><td>${fmtD(r.fecha)}</td><td>${r.hora||'—'}</td><td>${pVal(r.od)}</td><td>${pVal(r.oi)}</td><td>${pVal(r.pqOD)}</td><td>${pVal(r.pqOI)}</td></tr>`).join('')}</tbody>
+      </table>`:''}
+      ${enc.retina_vitreo?`<div style="margin-top:6px">${pRow('Retina y Vítreo','')}<div class="p-textbox">${pEsc(enc.retina_vitreo)}</div></div>`:''}
+    </div>
+
+    <!-- SECCIÓN: Diagnósticos y Plan -->
+    <div class="p-section">
+      <div class="p-section-title">Diagnósticos y Plan de Atención</div>
+      ${dxList.length?`<div style="margin-bottom:8px">${dxList.map(dx=>`
+        <div class="p-dx">
+          <span style="color:#718096;font-size:9.5px;min-width:80px">${fmtD(dx.fecha)}</span>
+          <span style="flex:1;font-weight:700;font-size:11px">${pEsc(dx.diag)}</span>
+          <span class="p-dx-pill">${pEsc(dx.ojo||'AO')}</span>
+        </div>`).join('')}</div>`:'<div style="color:#a0aec0;font-size:10.5px;margin-bottom:6px">Sin diagnósticos registrados en esta consulta.</div>'}
+      ${enc.paraclinicos?`${pRow('Paraclínicos / Análisis','')}<div class="p-textbox">${pEsc(enc.paraclinicos)}</div>`:''}
+      ${enc.plan?`${pRow('Plan de Atención','')}<div class="p-textbox">${pEsc(enc.plan)}</div>`:''}
+    </div>
+
+    ${printSig()}
+    ${printFooter(`HC – ${enc.type||'Consulta'} del ${fmtD(enc.date)}`)}
+  </div>`;
+
+  window.print();
+}
+
+// ── PRINT: RESUMEN DEL PACIENTE ──
+function printPatSummary(pid){
+  const pat = DB.pGet(pid);
+  if(!pat){ toast('⚠ Paciente no encontrado.','error'); return; }
+  const age    = calcAge(pat.bd);
+  const encs   = DB.eForPat(pid);
+  const injs   = DB.iForPat(pid);
+  const sxs    = DB.sForPat(pid);
+  const citas  = DB.citaForPat(pid).filter(c=>c.date>=today()&&c.estado==='programada').slice(0,5);
+  const st     = patStatus(pid);
+  const ci     = cycleInfo(pid);
+  const lastEnc= encs[0];
+  const MONTHS_S=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  document.getElementById('print-area').innerHTML = `<div class="print-doc">
+    ${printHeader(pat)}
+    ${printPatBanner(pat)}
+
+    <!-- KPIs -->
+    <div class="p-kpis">
+      <div class="p-kpi"><div class="v">${encs.length}</div><div class="l">Consultas</div></div>
+      <div class="p-kpi"><div class="v">${injs.length}</div><div class="l">Inyecciones</div></div>
+      <div class="p-kpi"><div class="v">${sxs.length}</div><div class="l">Cirugías</div></div>
+      <div class="p-kpi" style="border-top-color:${st.cls==='b-red'?'#e53e3e':st.cls==='b-amber'?'#d69e2e':st.cls==='b-green'?'#38a169':'#3182ce'}">
+        <div class="v" style="font-size:14px">${st.label}</div><div class="l">Estado IVT</div>
+      </div>
+    </div>
+
+    <div class="p-2col">
+      <!-- Datos clínicos -->
+      <div class="p-section">
+        <div class="p-section-title">Datos del Paciente</div>
+        ${pRow('Cédula', pEsc(pat.cedula))}
+        ${pRow('Teléfono', pEsc(pat.phone))}
+        ${pat.email ? pRow('Email', pEsc(pat.email)) : ''}
+        ${pat.bd ? pRow('F. Nacimiento', `${fmtD(pat.bd)} (${age} años)`) : ''}
+        ${pat.sex ? pRow('Sexo', pat.sex==='M'?'Masculino':'Femenino') : ''}
+        ${pRow('Estado', pEsc(pat.status||'activo'))}
+        ${pRow('Registrado', fmtD(pat.createdAt))}
+        ${pRow('Diagnóstico', pVal(pat.diag))}
+        ${pat.notes ? pRow('Notas', pEsc(pat.notes)) : ''}
+      </div>
+      <!-- Seguimiento IVT -->
+      <div class="p-section">
+        <div class="p-section-title">Seguimiento de Inyecciones</div>
+        ${pRow('Estado', `<strong>${pEsc(st.label)}</strong>`)}
+        ${st.next ? pRow('Próxima Cita', `<strong>${fmtD(st.next)}</strong>`) : ''}
+        ${st.daysUntil!==null ? pRow(st.daysUntil<0?'Vencida hace':'Faltan', `<strong>${Math.abs(st.daysUntil)} días</strong>`) : ''}
+        ${pRow('Ciclo / Dosis', `Ciclo ${ci.cycle}, dosis ${ci.dose} de 3`)}
+        ${pRow('Total inyecciones', String(injs.length))}
+        ${injs.length ? pRow('Última inyección', fmtD(injs[injs.length-1].date)) : ''}
+      </div>
+    </div>
+
+    <!-- Historial inyecciones -->
+    ${injs.length ? `<div class="p-section">
+      <div class="p-section-title">Historial de Inyecciones Intravítreas (${injs.length})</div>
+      <table class="p-table">
+        <thead><tr><th>Fecha</th><th>Ojo</th><th>Medicamento</th><th>Ciclo</th><th>Dosis</th><th>Próxima Cita</th></tr></thead>
+        <tbody>${[...injs].reverse().slice(0,10).map(i=>`<tr>
+          <td>${fmtD(i.date)}</td><td>${pEsc(i.eye)}</td><td style="text-align:left">${pEsc(i.med)}</td>
+          <td>${i.cycle}</td><td>${i.dose}</td><td>${fmtD(i.nextDate)}</td>
+        </tr>`).join('')}
+        ${injs.length>10?`<tr><td colspan="6" style="text-align:center;color:#718096;font-style:italic">... y ${injs.length-10} más</td></tr>`:''}</tbody>
+      </table>
+    </div>` : ''}
+
+    <!-- Cirugías -->
+    ${sxs.length ? `<div class="p-section">
+      <div class="p-section-title">Cirugías (${sxs.length})</div>
+      <table class="p-table">
+        <thead><tr><th>Fecha</th><th>Ojo</th><th>Procedimientos</th><th>Estado</th><th>Checklist</th></tr></thead>
+        <tbody>${[...sxs].reverse().map(sx=>{const cs=clStatus(sx);return`<tr>
+          <td>${fmtD(sx.date)}</td><td>${pEsc(sx.eye)}</td>
+          <td style="text-align:left">${(sx.procs||[]).join(', ')||'—'}</td>
+          <td>${pEsc(SX_ESTADOS.find(e=>e.v===(sx.estado||'programada'))?.l||'—')}</td>
+          <td>${cs.done}/${cs.total}</td>
+        </tr>`;}).join('')}</tbody>
+      </table>
+    </div>` : ''}
+
+    <!-- Próximas citas -->
+    ${citas.length ? `<div class="p-section">
+      <div class="p-section-title">Próximas Citas Programadas</div>
+      <table class="p-table">
+        <thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Notas</th></tr></thead>
+        <tbody>${citas.map(c=>`<tr>
+          <td>${fmtD(c.date)}</td><td>${c.time||'—'}</td>
+          <td>${CITA_TIPOS.find(t=>t.v===c.tipo)?.l||c.tipo}</td>
+          <td style="text-align:left">${pEsc(c.notas||'—')}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>` : ''}
+
+    ${printSig()}
+    ${printFooter(`Resumen del Paciente · CI: ${pEsc(pat.cedula)}`)}
+  </div>`;
+
+  window.print();
+}
+
+// ── PRINT: REPORTE MENSUAL / ANUAL ──
+function printReport(period){
+  const td=today(), yr=td.slice(0,4), ym=td.slice(0,7);
+  const allI=DB.iAll(), allS=DB.sAll(), pats=DB.pAll();
+  const isMonth = period==='mes';
+  const prefix  = isMonth ? ym : yr;
+  const label   = isMonth ? `Mes ${MNAMES[parseInt(ym.split('-')[1])-1]} ${yr}` : `Año ${yr}`;
+  const injF    = allI.filter(i=>i.date.startsWith(prefix));
+  const sxF     = allS.filter(s=>s.date.startsWith(prefix));
+  const pNew    = pats.filter(p=>(p.createdAt||'').startsWith(prefix));
+  const byMed   = injF.reduce((a,i)=>{a[i.med]=(a[i.med]||0)+1;return a;},{});
+  const byType  = sxF.reduce((a,s)=>{(s.procs||[]).forEach(p=>{a[p]=(a[p]||0)+1;});return a;},{});
+  const byDx    = injF.reduce((a,i)=>{if(i.diag)a[i.diag]=(a[i.diag]||0)+1;return a;},{});
+  const MONTHS_S=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const maxMed  = Math.max(...Object.values(byMed),1);
+
+  // Monthly breakdown for annual report
+  const monthData = isMonth ? null : Array.from({length:12},(_,i)=>{
+    const mp=`${yr}-${String(i+1).padStart(2,'0')}`;
+    return{l:MONTHS_S[i],inj:allI.filter(x=>x.date.startsWith(mp)).length,sx:allS.filter(x=>x.date.startsWith(mp)).length};
+  });
+  const maxMonthInj = monthData ? Math.max(...monthData.map(d=>d.inj),1) : 1;
+
+  document.getElementById('print-area').innerHTML = `<div class="print-doc">
+    ${printHeader(null)}
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:19px;font-weight:800;color:#1a2540;letter-spacing:-.3px">Reporte de Actividad Clínica</div>
+      <div style="font-size:13px;color:#718096;margin-top:2px">${label} · ${pEsc(SESSION.name)} · ${pEsc(getUser(SESSION.uid)?.clinic||'')}</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="p-kpis">
+      <div class="p-kpi"><div class="v">${injF.length}</div><div class="l">Inyecciones</div></div>
+      <div class="p-kpi"><div class="v">${sxF.length}</div><div class="l">Cirugías</div></div>
+      <div class="p-kpi"><div class="v">${pNew.length}</div><div class="l">Pacientes nuevos</div></div>
+      <div class="p-kpi"><div class="v">${pats.length}</div><div class="l">Total pacientes</div></div>
+    </div>
+
+    <div class="p-2col">
+      <!-- Por medicamento -->
+      <div class="p-section">
+        <div class="p-section-title">Inyecciones por Medicamento</div>
+        ${Object.entries(byMed).sort((a,b)=>b[1]-a[1]).map(([m,n])=>`
+          <div class="p-month-bar">
+            <div class="lbl" style="width:auto;min-width:90px;font-size:9px;color:#718096;text-align:left;padding-right:6px">${pEsc(m)}</div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((n/maxMed)*100)}%"></div></div>
+            <div class="num">${n}</div>
+          </div>`).join('')||'<div style="color:#a0aec0;font-size:10px">Sin registros.</div>'}
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:10.5px">
+          <strong>Total inyecciones:</strong> <strong>${injF.length}</strong>
+        </div>
+      </div>
+      <!-- Por tipo cirugía -->
+      <div class="p-section">
+        <div class="p-section-title">Cirugías por Tipo de Procedimiento</div>
+        ${Object.entries(byType).length ? Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:10.5px">
+            <span>${pEsc(t)}</span><strong>${n}</strong>
+          </div>`).join(''):'<div style="color:#a0aec0;font-size:10px">Sin cirugías.</div>'}
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:10.5px">
+          <strong>Total cirugías:</strong> <strong>${sxF.length}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly breakdown (only for annual) -->
+    ${monthData ? `<div class="p-section">
+      <div class="p-section-title">Evolución Mensual ${yr}</div>
+      <table class="p-table">
+        <thead><tr><th>Mes</th><th>Inyecciones</th><th>Cirugías</th><th>Total</th></tr></thead>
+        <tbody>${monthData.map(d=>`<tr>
+          <td>${d.l}</td>
+          <td>${d.inj}</td>
+          <td>${d.sx}</td>
+          <td><strong>${d.inj+d.sx}</strong></td>
+        </tr>`).join('')}
+        <tr style="background:#dbeafe!important;font-weight:700">
+          <td>TOTAL</td><td>${allI.filter(i=>i.date.startsWith(yr)).length}</td>
+          <td>${allS.filter(s=>s.date.startsWith(yr)).length}</td>
+          <td>${allI.filter(i=>i.date.startsWith(yr)).length+allS.filter(s=>s.date.startsWith(yr)).length}</td>
+        </tr></tbody>
+      </table>
+    </div>` : ''}
+
+    ${printSig()}
+    ${printFooter(`Reporte ${label}`)}
+  </div>`;
+
+  window.print();
+}
+
+// ══════════════════════════════════════════
+// VIEW: DASHBOARD
+// ══════════════════════════════════════════
+let _charts = {};
+
+function destroyCharts(){
+  Object.values(_charts).forEach(c=>{try{c.destroy();}catch{}});
+  _charts={};
+}
+
+function vDashboard(){
+  destroyCharts();
+  const td=today(), yr=td.slice(0,4), ym=td.slice(0,7);
+  const period = S.dashPeriod||'mes';
+  const prefix = period==='mes'?ym:yr;
+  const allI=DB.iAll(), allS=DB.sAll(), pats=DB.pAll();
+  const allCitas=DB.citaAll();
+
+  // Current period data
+  const injP  = allI.filter(i=>i.date.startsWith(prefix));
+  const sxP   = allS.filter(s=>s.date.startsWith(prefix));
+  const patP  = pats.filter(p=>(p.createdAt||'').startsWith(prefix));
+
+  // Previous period (for trend)
+  const prevPrefix = period==='mes'
+    ? (()=>{const d=new Date(td+'T12:00:00');d.setMonth(d.getMonth()-1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})()
+    : String(parseInt(yr)-1);
+  const injPrev = allI.filter(i=>i.date.startsWith(prevPrefix));
+  const sxPrev  = allS.filter(s=>s.date.startsWith(prevPrefix));
+
+  const trend=(curr,prev)=>{
+    if(!prev) return{icon:'→',cls:'trend-flat',txt:'sin comparación'};
+    const d=curr-prev;
+    if(d>0) return{icon:'↑',cls:'trend-up',txt:`+${d} vs ${period==='mes'?'mes anterior':'año anterior'}`};
+    if(d<0) return{icon:'↓',cls:'trend-down',txt:`${d} vs ${period==='mes'?'mes anterior':'año anterior'}`};
+    return{icon:'→',cls:'trend-flat',txt:`igual al ${period==='mes'?'mes':'año'} anterior`};
+  };
+  const tI=trend(injP.length,injPrev.length);
+  const tS=trend(sxP.length,sxPrev.length);
+
+  // Follow-up status counts
+  const statusCounts = pats.reduce((acc,p)=>{
+    const st=patStatus(p.id); acc[st.status]=(acc[st.status]||0)+1; return acc;
+  },{});
+  const urgentes=(statusCounts['muy-atrasado']||0)+(statusCounts['atrasado']||0);
+
+  // Citas hoy
+  const citasHoy=allCitas.filter(c=>c.date===td&&c.estado==='programada').length;
+
+  // Top medications (all time for this doctor)
+  const byMed  = allI.reduce((a,i)=>{a[i.med]=(a[i.med]||0)+1;return a;},{});
+  const topMed = Object.entries(byMed).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxMed = topMed[0]?.[1]||1;
+
+  // Top diagnoses
+  const byDx   = allI.filter(i=>i.diag).reduce((a,i)=>{a[i.diag]=(a[i.diag]||0)+1;return a;},{});
+  const topDx  = Object.entries(byDx).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxDx  = topDx[0]?.[1]||1;
+
+  // Top procedures
+  const byProc = allS.reduce((a,s)=>{(s.procs||[]).forEach(p=>{a[p]=(a[p]||0)+1;});return a;},{});
+  const topProc= Object.entries(byProc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxProc= topProc[0]?.[1]||1;
+
+  // Last 6 months data for chart
+  const last6=Array.from({length:6},(_,i)=>{
+    const d=new Date(td+'T12:00:00'); d.setMonth(d.getMonth()-5+i);
+    const lbl=MNAMES[d.getMonth()].substring(0,3);
+    const mp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return{lbl,inj:allI.filter(x=>x.date.startsWith(mp)).length,sx:allS.filter(x=>x.date.startsWith(mp)).length,citas:allCitas.filter(x=>x.date.startsWith(mp)).length};
+  });
+
+  // Recent activity (last 8 events combined)
+  const recentI = [...allI].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4).map(i=>({date:i.date,type:'inj',ico:'💉',title:`Inyección ${i.eye}`,sub:`${i.med}${i.diag?' · '+i.diag:''}`,pid:i.pid}));
+  const recentS = [...allS].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4).map(s=>({date:s.date,type:'sx',ico:'🔬',title:(s.procs||[]).slice(0,2).join(', ')||'Cirugía',sub:`${s.eye}${s.diag?' · '+s.diag:''}`,pid:s.pid}));
+  const recentAll= [...recentI,...recentS].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+
+  const pName=pid=>{const p=pats.find(x=>x.id===pid);return p?`${p.ln}, ${p.fn}`:'—';};
+
+  // Status colors
+  const STATUS_COLORS={
+    'sin-datos':'#94a3b8','muy-atrasado':'#e53e3e','atrasado':'#d69e2e',
+    'esta-semana':'#dd6b20','proximo':'#3182ce','en-seguimiento':'#38a169','sin-fecha':'#cbd5e0'
+  };
+  const STATUS_LABELS={
+    'sin-datos':'Sin procedimientos','muy-atrasado':'Muy atrasado','atrasado':'Atrasado',
+    'esta-semana':'Esta semana','proximo':'Próximo','en-seguimiento':'En seguimiento','sin-fecha':'Sin fecha'
+  };
+
+  // Bar chart fill %
+  const kpiBarPct=(curr,prev)=>prev?Math.min(100,Math.round((curr/Math.max(curr,prev))*100)):100;
+
+  const periodLabel = period==='mes'
+    ? `${MNAMES[parseInt(ym.split('-')[1])-1]} ${yr}`
+    : `Año ${yr}`;
+
+  setTimeout(()=>{
+    // Chart 1: Activity last 6 months (bar)
+    const ctx1=document.getElementById('ch-activity');
+    if(ctx1){
+      _charts.activity=new Chart(ctx1,{
+        type:'bar',
+        data:{
+          labels:last6.map(d=>d.lbl),
+          datasets:[
+            {label:'Inyecciones',data:last6.map(d=>d.inj),backgroundColor:'rgba(49,130,206,.8)',borderRadius:4,borderSkipped:false},
+            {label:'Cirugías',   data:last6.map(d=>d.sx), backgroundColor:'rgba(11,197,234,.8)',borderRadius:4,borderSkipped:false},
+            {label:'Citas',      data:last6.map(d=>d.citas),backgroundColor:'rgba(56,161,105,.5)',borderRadius:4,borderSkipped:false}
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'DM Sans'},boxWidth:12,padding:14}}},
+          scales:{
+            y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{font:{size:11,family:'DM Sans'},stepSize:1}},
+            x:{grid:{display:false},ticks:{font:{size:11,family:'DM Sans'}}}
+          }
+        }
+      });
+    }
+    // Chart 2: Patient status doughnut
+    const ctx2=document.getElementById('ch-status');
+    if(ctx2){
+      const entries=Object.entries(statusCounts).filter(([,v])=>v>0);
+      if(entries.length){
+        _charts.status=new Chart(ctx2,{
+          type:'doughnut',
+          data:{
+            labels:entries.map(([k])=>STATUS_LABELS[k]||k),
+            datasets:[{data:entries.map(([,v])=>v),backgroundColor:entries.map(([k])=>STATUS_COLORS[k]||'#94a3b8'),borderWidth:2,borderColor:'#fff',hoverBorderColor:'#fff'}]
+          },
+          options:{
+            responsive:true,maintainAspectRatio:false,cutout:'68%',
+            plugins:{legend:{position:'right',labels:{font:{size:11,family:'DM Sans'},boxWidth:11,padding:10}}}
+          }
+        });
+      }
+    }
+    // Chart 3: Monthly trend line (only annual period)
+    const ctx3=document.getElementById('ch-trend');
+    if(ctx3&&period==='anio'){
+      const mData=Array.from({length:12},(_,i)=>{
+        const mp=`${yr}-${String(i+1).padStart(2,'0')}`;
+        return{l:MNAMES[i].substring(0,3),inj:allI.filter(x=>x.date.startsWith(mp)).length};
+      });
+      _charts.trend=new Chart(ctx3,{
+        type:'line',
+        data:{
+          labels:mData.map(d=>d.l),
+          datasets:[{
+            label:'Inyecciones mensuales',data:mData.map(d=>d.inj),
+            borderColor:'#3182ce',backgroundColor:'rgba(49,130,206,.1)',
+            borderWidth:2.5,fill:true,tension:.4,
+            pointBackgroundColor:'#3182ce',pointRadius:4,pointHoverRadius:6
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:11}}}}
+        }
+      });
+    }
+  },50);
+
+  return PH('Dashboard',`Actividad clínica · ${periodLabel} · ${SESSION.name}`,
+    `<button class="btn btn-ghost btn-sm" onclick="printReport('${period==='mes'?'mes':'anio'}')">🖨 Imprimir Reporte</button>`)
+  +`<div class="ca">
+    <!-- Period selector -->
+    <div class="period-tabs">
+      ${[{v:'mes',l:'Este Mes'},{v:'anio',l:'Este Año'}].map(p=>`
+        <button class="period-tab ${(S.dashPeriod||'mes')===p.v?'active':''}"
+          onclick="S.dashPeriod='${p.v}';document.getElementById('view').innerHTML=renderView();setTimeout(()=>{/* charts init via setTimeout in renderView */},0)">
+          ${p.l}
+        </button>`).join('')}
+      <span style="margin-left:auto;font-size:12px;color:var(--g400);display:flex;align-items:center">${periodLabel}</span>
+    </div>
+
+    <!-- KPI Row 1 -->
+    <div class="dash-grid mb16">
+      <div class="dash-kpi blue">
+        <span class="dash-kpi-ico">💉</span>
+        <div class="dash-kpi-lbl">Inyecciones</div>
+        <div class="dash-kpi-val">${injP.length}</div>
+        <div class="dash-kpi-sub">${periodLabel}</div>
+        <div class="dash-kpi-trend ${tI.cls}">${tI.icon} ${tI.txt}</div>
+        <div class="dash-kpi-bar"><div class="dash-kpi-bar-fill" style="width:${kpiBarPct(injP.length,injPrev.length)}%"></div></div>
+      </div>
+      <div class="dash-kpi teal">
+        <span class="dash-kpi-ico">🔬</span>
+        <div class="dash-kpi-lbl">Cirugías</div>
+        <div class="dash-kpi-val">${sxP.length}</div>
+        <div class="dash-kpi-sub">${periodLabel}</div>
+        <div class="dash-kpi-trend ${tS.cls}">${tS.icon} ${tS.txt}</div>
+        <div class="dash-kpi-bar"><div class="dash-kpi-bar-fill" style="width:${kpiBarPct(sxP.length,sxPrev.length)}%"></div></div>
+      </div>
+      <div class="dash-kpi green">
+        <span class="dash-kpi-ico">👥</span>
+        <div class="dash-kpi-lbl">Pacientes nuevos</div>
+        <div class="dash-kpi-val">${patP.length}</div>
+        <div class="dash-kpi-sub">Total: ${pats.length} registrados</div>
+        <div class="dash-kpi-bar"><div class="dash-kpi-bar-fill" style="width:${patP.length?100:0}%"></div></div>
+      </div>
+      <div class="dash-kpi ${urgentes>0?'amber':'purple'}">
+        <span class="dash-kpi-ico">${urgentes>0?'⚠️':'✅'}</span>
+        <div class="dash-kpi-lbl">Alertas</div>
+        <div class="dash-kpi-val">${urgentes}</div>
+        <div class="dash-kpi-sub">${urgentes>0?`paciente${urgentes!==1?'s':''} con IVT vencida`:'Seguimiento al día'}</div>
+        <div class="dash-kpi-bar"><div class="dash-kpi-bar-fill" style="width:${urgentes?Math.min(100,urgentes*10):0}%"></div></div>
+      </div>
+    </div>
+
+    <!-- KPI Row 2: totals -->
+    <div class="dash-grid mb16">
+      ${[
+        {ico:'💉',lbl:'Total inyecciones',val:allI.length,sub:'histórico',cls:'blue'},
+        {ico:'🔬',lbl:'Total cirugías',val:allS.length,sub:'histórico',cls:'teal'},
+        {ico:'📅',lbl:'Citas hoy',val:citasHoy,sub:'programadas',cls:'green'},
+        {ico:'📋',lbl:'Citas totales',val:allCitas.length,sub:'registradas',cls:'purple'}
+      ].map(k=>`<div class="dash-kpi ${k.cls}">
+        <span class="dash-kpi-ico">${k.ico}</span>
+        <div class="dash-kpi-lbl">${k.lbl}</div>
+        <div class="dash-kpi-val">${k.val}</div>
+        <div class="dash-kpi-sub">${k.sub}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Charts row -->
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="chart-card">
+        <div class="chart-card-title">Actividad Últimos 6 Meses</div>
+        <div class="chart-card-sub">Inyecciones, cirugías y citas por mes</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="ch-activity"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Estado de Seguimiento</div>
+        <div class="chart-card-sub">Distribución de pacientes por estado IVT</div>
+        <div class="chart-wrap" style="height:220px">
+          ${pats.length?`<canvas id="ch-status"></canvas>`:`<div style="display:flex;align-items:center;justify-content:center;height:220px;color:var(--g400);font-size:13px">Sin pacientes registrados</div>`}
+        </div>
+      </div>
+    </div>
+
+    <!-- Second charts row (annual only: trend line) -->
+    ${period==='anio'?`<div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-card-title">Tendencia de Inyecciones — ${yr}</div>
+      <div class="chart-card-sub">Evolución mensual de inyecciones intravítreas en el año</div>
+      <div class="chart-wrap" style="height:160px"><canvas id="ch-trend"></canvas></div>
+    </div>`:''}
+
+    <!-- Bottom stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+      <!-- Top medicamentos -->
+      <div class="chart-card">
+        <div class="chart-card-title">Medicamentos más usados</div>
+        <div class="chart-card-sub">Todas las inyecciones registradas</div>
+        ${topMed.length?topMed.map(([m,n])=>`<div class="mini-bar-row">
+          <div class="mini-bar-label" title="${esc(m)}">${esc(m)}</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round((n/maxMed)*100)}%;background:var(--blue)"></div></div>
+          <div class="mini-bar-num">${n}</div>
+        </div>`).join(''):`<div class="empty-mini">Sin inyecciones registradas.</div>`}
+      </div>
+
+      <!-- Top diagnósticos -->
+      <div class="chart-card">
+        <div class="chart-card-title">Diagnósticos frecuentes</div>
+        <div class="chart-card-sub">Por frecuencia en inyecciones</div>
+        ${topDx.length?topDx.map(([d,n])=>`<div class="mini-bar-row">
+          <div class="mini-bar-label" title="${esc(d)}">${esc(d)}</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round((n/maxDx)*100)}%;background:var(--teal)"></div></div>
+          <div class="mini-bar-num">${n}</div>
+        </div>`).join(''):`<div class="empty-mini">Sin diagnósticos registrados.</div>`}
+      </div>
+
+      <!-- Actividad reciente -->
+      <div class="chart-card">
+        <div class="chart-card-title">Actividad Reciente</div>
+        <div class="chart-card-sub">Últimos procedimientos registrados</div>
+        ${recentAll.length?recentAll.map(a=>`<div class="activity-item">
+          <div class="activity-dot ${a.type}"></div>
+          <div class="activity-content">
+            <div class="activity-title">${a.ico} ${esc(a.title)}</div>
+            <div class="activity-meta">${esc(pName(a.pid))} · ${fmtD(a.date)}</div>
+            ${a.sub?`<div class="activity-meta">${esc(a.sub)}</div>`:''}
+          </div>
+        </div>`).join(''):`<div class="empty-mini">Sin actividad reciente.</div>`}
+      </div>
+    </div>
+
+    <!-- Procedures row (if any surgeries) -->
+    ${topProc.length?`<div class="chart-card" style="margin-top:12px">
+      <div class="chart-card-title">Procedimientos Quirúrgicos más frecuentes</div>
+      <div class="chart-card-sub">Todos los procedimientos registrados en cirugías</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+        ${topProc.map(([p,n])=>`<div class="mini-bar-row">
+          <div class="mini-bar-label" title="${esc(p)}">${esc(p)}</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round((n/maxProc)*100)}%;background:var(--teal)"></div></div>
+          <div class="mini-bar-num">${n}</div>
+        </div>`).join('')}
+      </div>
+    </div>`:''}
+
+  </div>`;
+}
+
+function addCatalogItem(type){
+  const inp=document.getElementById(`new-${type}-cfg`);const name=(inp?.value||'').trim();
+  if(!name){toast('⚠ Ingrese un nombre.','warn');return;}
+  if(type==='diag'){
+    if(getDiags().find(x=>x.name.toLowerCase()===name.toLowerCase())){toast(`"${name}" ya existe.`,'warn');return;}
+    addDiag(name);
+  } else {
+    if(getSxTipos().find(x=>x.name.toLowerCase()===name.toLowerCase())){toast(`"${name}" ya existe.`,'warn');return;}
+    addSxTipo(name);
+  }
+  toast(`✅ "${name}" agregado.`,'success');
+  document.getElementById('view').innerHTML=renderView();
+}
+function removeCatalogItem(type,id){
+  if(!confirm('¿Eliminar este elemento?'))return;
+  type==='diag'?delDiag(id):delSxTipo(id);
+  toast('Elemento eliminado.','warn');
+  document.getElementById('view').innerHTML=renderView();
+}
+
+// ══════════════ DROPDOWN ══════════════
+function toggleDD(el){const menu=el.nextElementSibling||el.parentElement.querySelector('.dd-menu');if(!menu)return;const isOpen=menu.classList.contains('open');closeAllDD();if(!isOpen){menu.classList.add('open');el.classList.add('open');}}
+function closeAllDD(){document.querySelectorAll('.dd-menu.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.tb-btn.open').forEach(b=>b.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!e.target.closest('.dd')&&!e.target.closest('.tb-user-pill'))closeAllDD();});
+
+// ══════════════ TOASTS ══════════════
+function toast(msg,type='info'){const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>{el.classList.add('toast-out');setTimeout(()=>el.remove(),400);},3200);}
+
+// ══════════════ BOOT ══════════════
+function seedIfNeeded(){
+  if(sGet('rc_seeded_v7'))return;
+  saveOrg({id:'org_main_001',name:'RetinaClinics',country:'Paraguay',createdAt:today()});
+  const ah=hashPwd('admin123'), dh=hashPwd('demo123');
+  [{id:'usr_admin_001',org_id:'org_main_001',email:'admin@retinaclinics.com',name:'Administrador del Sistema',initials:'SA',spec:'Administración',clinic:'RetinaClinics',role:'super_admin',pwd:ah,createdAt:today(),active:true},
+   {id:'usr_doc_001',org_id:'org_main_001',email:'doctor@retinaclinics.com',name:'Dr. Carlos Méndez',initials:'CM',spec:'Retina y Vítreo',clinic:'Centro Oftalmológico',role:'doctor',pwd:dh,createdAt:today(),active:true}
+  ].forEach(saveUser);
+  // Default diagnoses
+  const defs=['DMRE Húmeda','DMRE Seca','Edema Macular Diabético','Oclusión Venosa Retiniana','Neovascularización Coroidea','Membrana Epirretiniana','Agujero Macular','Desprendimiento de Retina','Endoftalmitis','Uveítis','Retinopatía Diabética'];
+  const da=sGet('rc_diags')||[];defs.forEach(name=>da.push({id:genId(),name,did:'usr_doc_001',org_id:'org_main_001',createdAt:today()}));sSet('rc_diags',da);
+  // Default surgery types
+  const sxtDefs=['Vitrectomía Pars Plana','Cerclaje Escleral','Fotocoagulación Láser','Facoemulsificación + LIO','Membranectomía','Inyección Aceite de Silicona','Extracción Aceite de Silicona','Crioterapia Retiniana'];
+  const sa=sGet('rc_sxt')||[];sxtDefs.forEach(name=>sa.push({id:genId(),name,did:'usr_doc_001',org_id:'org_main_001',createdAt:today()}));sSet('rc_sxt',sa);
+  // Sample patients
+  [{id:'pat_001',org_id:'org_main_001',did:'usr_doc_001',fn:'Roberto',ln:'García',cedula:'12345678',phone:'+595 9 8111-2222',email:'',bd:'1952-03-15',sex:'M',status:'activo',diag:'DMRE Húmeda',notes:'HTA controlada.',req_seg:false,nota_seg:'',pendiente:false,nota_pendiente:'',createdAt:'2024-01-10'},
+   {id:'pat_002',org_id:'org_main_001',did:'usr_doc_001',fn:'María',ln:'López',cedula:'23456789',phone:'+595 9 8222-3333',email:'mlopez@email.com',bd:'1965-07-22',sex:'F',status:'activo',diag:'Edema Macular Diabético',notes:'DM tipo 2.',req_seg:true,nota_seg:'Llamar al familiar.',pendiente:true,nota_pendiente:'No asistió a última cita. Reagendar urgente.',createdAt:'2024-02-05'},
+   {id:'pat_003',org_id:'org_main_001',did:'usr_doc_001',fn:'Carlos',ln:'Fernández',cedula:'34567890',phone:'+595 9 8333-4444',email:'',bd:'1948-11-30',sex:'M',status:'activo',diag:'Membrana Epirretiniana',notes:'Candidato a vitrectomía.',req_seg:false,nota_seg:'',pendiente:false,nota_pendiente:'',createdAt:'2024-03-20'}
+  ].forEach(p=>DB.pSave(p));
+  // Sample injections
+  [{id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_001',date:'2025-01-08',eye:'OD',med:'Bevacizumab',diag:'DMRE Húmeda',cycle:1,dose:3,nextDate:'2025-04-08',notes:'',createdAt:'2025-01-08'},
+   {id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_002',date:'2025-02-10',eye:'OD',med:'Bevacizumab',diag:'Edema Macular Diabético',cycle:1,dose:1,nextDate:'2025-03-10',notes:'',createdAt:'2025-02-10'},
+   {id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_002',date:'2025-03-12',eye:'OD',med:'Bevacizumab',diag:'Edema Macular Diabético',cycle:1,dose:2,nextDate:'2025-04-12',notes:'',createdAt:'2025-03-12'}
+  ].forEach(i=>DB.iSave(i));
+  // Sample surgery
+  DB.sSave({id:'sx_001',org_id:'org_main_001',did:'usr_doc_001',pid:'pat_003',date:'2025-06-15',eye:'OD',procs:['Vitrectomía Pars Plana','Membranectomía'],diag:'Membrana Epirretiniana',estado:'programada',checklist:{lab:true,ecg:true,aut:false,bio:true,end:false},notes:'Programada para junio.',createdAt:'2025-04-01'});
+  // Sample citas
+  const todayStr=today();const tomorrow=addDays(todayStr,1);const nextWeek=addDays(todayStr,7);
+  [{id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_001',date:todayStr,time:'09:00',tipo:'inyeccion',estado:'programada',notas:'Control ciclo 2 - Dosis 1',createdAt:todayStr},
+   {id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_003',date:tomorrow,time:'10:30',tipo:'consulta',estado:'programada',notas:'Evaluación pre-quirúrgica',createdAt:todayStr},
+   {id:genId(),org_id:'org_main_001',did:'usr_doc_001',pid:'pat_001',date:nextWeek,time:'11:00',tipo:'control',estado:'programada',notas:'Control mensual DMRE',createdAt:todayStr}
+  ].forEach(c=>DB.citaSave(c));
+  sSet('rc_seeded_v7',true);
+}
+
+function showApp(){
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tb-name').textContent=SESSION.name;
+  document.getElementById('tb-spec').textContent=SESSION.spec||'';
+  document.getElementById('tb-av').textContent=SESSION.initials;
+  document.getElementById('tb-uname').textContent=SESSION.name.split(' ').slice(-1)[0];
+  document.getElementById('tb-role-label').textContent=SESSION.role==='super_admin'?'👑 Super Administrador':'🩺 Doctor';
+  document.getElementById('tb-date').textContent=fmtDateLong();
+  setInterval(()=>document.getElementById('tb-date').textContent=fmtDateLong(),60000);
+  if(SESSION.role==='super_admin')document.getElementById('admin-dd').style.display='block';
+  nav('patients');
+  setTimeout(updateNotifBadge,100);
+}
+
+function doLogin(){
+  const btn=document.getElementById('login-btn'),errDiv=document.getElementById('login-err');
+  const email=document.getElementById('login-email').value.trim(),pwd=document.getElementById('login-pwd').value;
+  if(!email||!pwd){errDiv.style.display='block';errDiv.textContent='⚠ Complete email y contraseña.';return;}
+  btn.disabled=true;btn.textContent='Verificando…';errDiv.style.display='none';
+  try{
+    const user=getUserByEmail(email);
+    if(!user)throw new Error('Email no registrado en el sistema.');
+    const hash=hashPwd(pwd);
+    if(hash!==user.pwd)throw new Error('Contraseña incorrecta.');
+    if(user.active===false)throw new Error('Esta cuenta está desactivada.');
+    setSession(user);showApp();
+  }catch(err){
+    errDiv.style.display='block';errDiv.textContent='⚠ '+err.message;
+    btn.disabled=false;btn.textContent='Ingresar al Sistema';
+  }
+}
+
+
+function boot(){seedIfNeeded();if(loadSession()){showApp();}else{document.getElementById('login-overlay').style.display='flex';}}
+boot();
+</script>
+</body>
+</html>
