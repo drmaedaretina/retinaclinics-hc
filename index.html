@@ -460,7 +460,9 @@ html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g
 
 <div id="app" style="display:none">
   <div id="top-bar">
-    <div class="tb-brand"><div class="tb-logo">RC</div><span class="tb-appname">RetinaClinics HC</span></div>
+    <div class="tb-brand"><div class="tb-logo">RC</div><span class="tb-appname">RetinaClinics HC</span>
+      <span id="sb-dot" title="Sin backend configurado" style="width:8px;height:8px;border-radius:50%;background:#a0aec0;display:inline-block;margin-left:6px;flex-shrink:0"></span>
+    </div>
     <div class="tb-doc"><strong id="tb-name">—</strong><span id="tb-spec" style="color:var(--g500)">—</span></div>
     <div class="tb-date" id="tb-date">—</div>
     <div class="tb-nav">
@@ -536,8 +538,220 @@ const DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'
 const MNAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const fmtDateLong=()=>{const d=new Date();return`${DAYS[d.getDay()]}, ${d.getDate()} de ${MNAMES[d.getMonth()]} de ${d.getFullYear()}`;};
 
-// ══════════════ STORAGE ══════════════
-const _M={};
+// ══════════════════════════════════════════
+// SUPABASE BACKEND SYNC
+// ══════════════════════════════════════════
+
+// Config helpers
+const SB_URL  = () => sGet('rc_sb_url') || 'https://aufzktoegmpivhonwcvm.supabase.co';
+const SB_KEY  = () => sGet('rc_sb_key') || 'sb_publishable_v6QlzMHx1xWNrVi__zQ7-Q_Z16yZpdq';
+const sbOK    = () => !!(SB_URL() && SB_KEY());
+const sbStatus= () => sGet('rc_sb_status') || 'offline'; // 'online'|'offline'|'error'
+
+function sbH(extra={}){
+  return{
+    'apikey': SB_KEY(),
+    'Authorization': `Bearer ${SB_KEY()}`,
+    'Content-Type': 'application/json',
+    ...extra
+  };
+}
+
+// ── Background upsert (fire-and-forget, never blocks UI) ──
+function sbUpsert(table, record){
+  if(!sbOK()) return;
+  fetch(`${SB_URL()}/rest/v1/${table}`, {
+    method:'POST',
+    headers: sbH({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+    body: JSON.stringify(record)
+  }).then(r=>{
+    if(r.ok){ sSet('rc_sb_status','online'); updateSbIndicator(); }
+    else{ sSet('rc_sb_status','error'); updateSbIndicator(); }
+  }).catch(()=>{ sSet('rc_sb_status','error'); updateSbIndicator(); });
+}
+
+// ── Background delete ──
+function sbDelete(table, id){
+  if(!sbOK()) return;
+  fetch(`${SB_URL()}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+    method:'DELETE',
+    headers: sbH()
+  }).catch(()=>{});
+}
+
+// ── Pull all data from Supabase → localStorage ──
+async function sbPull(){
+  if(!sbOK()) return false;
+  const did = MY_DID();
+  const tables = [
+    {key:'rc_p',    table:'rc_patients'},
+    {key:'rc_i',    table:'rc_injections'},
+    {key:'rc_s',    table:'rc_surgeries'},
+    {key:'rc_enc',  table:'rc_encounters'},
+    {key:'rc_citas',table:'rc_citas'},
+    {key:'rc_diags',table:'rc_catalogs', filter:`type=eq.diag`},
+    {key:'rc_sxt',  table:'rc_catalogs', filter:`type=eq.sxt`}
+  ];
+  try{
+    let anyData = false;
+    for(const t of tables){
+      const didFilter = SESSION.role==='super_admin' ? '' : `did=eq.${encodeURIComponent(did)}`;
+      const filter    = [didFilter, t.filter].filter(Boolean).join('&');
+      const url       = `${SB_URL()}/rest/v1/${t.table}?${filter}&select=id,data`;
+      const res       = await fetch(url, { headers: sbH() });
+      if(!res.ok) continue;
+      const rows = await res.json();
+      if(!rows.length) continue;
+      anyData = true;
+      const local = sGet(t.key) || [];
+      const merged = [...local];
+      rows.forEach(row=>{
+        if(!row.data) return;
+        const rec = row.data;
+        const idx = merged.findIndex(l=>l.id===rec.id);
+        if(idx>=0) merged[idx]=rec; else merged.push(rec);
+      });
+      sSet(t.key, merged);
+    }
+    sSet('rc_sb_status','online');
+    updateSbIndicator();
+    return anyData;
+  }catch(e){
+    sSet('rc_sb_status','error');
+    updateSbIndicator();
+    return false;
+  }
+}
+
+// ── Push all localStorage data → Supabase ──
+async function sbPushAll(){
+  if(!sbOK()) return {ok:false, msg:'Sin configuración de backend.'};
+  const did = MY_DID();
+  const sets = [
+    {key:'rc_p',    table:'rc_patients',   pid:null},
+    {key:'rc_i',    table:'rc_injections', pid:'pid'},
+    {key:'rc_s',    table:'rc_surgeries',  pid:'pid'},
+    {key:'rc_enc',  table:'rc_encounters', pid:'pid'},
+    {key:'rc_citas',table:'rc_citas',      pid:'pid'},
+  ];
+  const diagRecords = (sGet('rc_diags')||[]).filter(d=>d.did===did).map(d=>({id:d.id,did:d.did,org_id:d.org_id||MY_ORG(),type:'diag',data:d}));
+  const sxtRecords  = (sGet('rc_sxt') ||[]).filter(s=>s.did===did).map(s=>({id:s.id,did:s.did,org_id:s.org_id||MY_ORG(),type:'sxt', data:s}));
+  const catalogBatch= [...diagRecords,...sxtRecords];
+  let total=0, errors=0;
+  try{
+    for(const s of sets){
+      const records = (sGet(s.key)||[]).filter(r=>SESSION.role==='super_admin'||r.did===did);
+      for(const r of records){
+        const row = {id:r.id, did:r.did||did, org_id:r.org_id||MY_ORG(), data:r};
+        if(s.pid && r[s.pid]) row.pid = r[s.pid];
+        const res = await fetch(`${SB_URL()}/rest/v1/${s.table}`, {
+          method:'POST',
+          headers: sbH({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+          body: JSON.stringify(row)
+        });
+        res.ok ? total++ : errors++;
+      }
+    }
+    for(const r of catalogBatch){
+      const res = await fetch(`${SB_URL()}/rest/v1/rc_catalogs`, {
+        method:'POST',
+        headers: sbH({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+        body: JSON.stringify(r)
+      });
+      res.ok ? total++ : errors++;
+    }
+    sSet('rc_sb_status','online');
+    updateSbIndicator();
+    return {ok:true, total, errors};
+  }catch(e){
+    sSet('rc_sb_status','error');
+    updateSbIndicator();
+    return {ok:false, msg:e.message};
+  }
+}
+
+// ── Test connection ──
+async function sbTestConnection(url, key){
+  try{
+    // Test by trying to query rc_patients table directly
+    const res = await fetch(`${url}/rest/v1/rc_patients?limit=1`, {
+      headers:{
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    // 200 = OK, 404 = table missing, both mean credentials work
+    return res.status === 200 || res.status === 404 || res.status === 406;
+  }catch(e){ return false; }
+}
+
+// ── Status indicator in top bar ──
+function updateSbIndicator(){
+  const dot = document.getElementById('sb-dot');
+  if(!dot) return;
+  const st = sbStatus();
+  const colors = {online:'#38a169', offline:'#a0aec0', error:'#e53e3e'};
+  const labels = {online:'Sincronizado', offline:'Sin backend', error:'Error de conexión'};
+  dot.style.background = colors[st]||colors.offline;
+  dot.title = labels[st]||'';
+}
+
+// ══════════════════════════════════════════
+// EXPORT / IMPORT (backup local)
+// ══════════════════════════════════════════
+function exportData(){
+  const did = MY_DID();
+  const backup = {
+    version:'v7', did, exportedAt: new Date().toISOString(),
+    doctor: getUser(did),
+    patients:  DB.pAll(),
+    injections:DB.iAll(),
+    surgeries: DB.sAll(),
+    encounters:DB.eAll? DB.eAll():(sGet('rc_enc')||[]).filter(x=>x.did===did),
+    citas:     DB.citaAll(),
+    diags:     (sGet('rc_diags')||[]).filter(d=>d.did===did),
+    sxtypes:   (sGet('rc_sxt') ||[]).filter(s=>s.did===did)
+  };
+  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `RetinaClinics_backup_${today()}.json`;
+  a.click();
+  toast('✅ Backup exportado correctamente.','success');
+}
+
+function importData(){
+  const input = document.createElement('input');
+  input.type  = 'file'; input.accept = '.json';
+  input.onchange = async e => {
+    const file = e.target.files[0]; if(!file) return;
+    try{
+      const text = await file.text();
+      const bk   = JSON.parse(text);
+      if(!bk.version || !bk.patients) throw new Error('Archivo de backup inválido.');
+      if(!confirm(`¿Importar backup del ${bk.exportedAt?.split('T')[0]||'?'}?\n\nEsto FUSIONARÁ los datos del backup con los actuales.\nNo se eliminarán datos existentes.`)) return;
+      // Merge each collection
+      const merge = (key, arr) => {
+        const current = sGet(key)||[];
+        arr.forEach(r=>{ const i=current.findIndex(x=>x.id===r.id); i>=0?current[i]=r:current.push(r); });
+        sSet(key, current);
+      };
+      merge('rc_p',     bk.patients   ||[]);
+      merge('rc_i',     bk.injections ||[]);
+      merge('rc_s',     bk.surgeries  ||[]);
+      merge('rc_enc',   bk.encounters ||[]);
+      merge('rc_citas', bk.citas      ||[]);
+      merge('rc_diags', bk.diags      ||[]);
+      merge('rc_sxt',   bk.sxtypes    ||[]);
+      toast('✅ Datos importados correctamente. Recargando…','success');
+      setTimeout(()=>location.reload(), 1500);
+    }catch(err){
+      toast('❌ Error al importar: '+err.message,'error');
+    }
+  };
+  input.click();
+}
 const sGet=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return _M[k]||null;}};
 const sSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{_M[k]=v;}};
 
@@ -605,30 +819,26 @@ const diagSel=(val='',sid='sd',aid='d')=>`
 const DB={
   pAll:()=>{const r=sGet('rc_p')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
   pGet:id=>(sGet('rc_p')||[]).find(x=>x.id===id)||null,
-  pSave:p=>{const a=sGet('rc_p')||[],i=a.findIndex(x=>x.id===p.id);i>=0?a[i]=p:a.push(p);sSet('rc_p',a);return p;},
-  pDel:id=>sSet('rc_p',(sGet('rc_p')||[]).filter(x=>x.id!==id)),
-  // Encounters
+  pSave:p=>{const a=sGet('rc_p')||[],i=a.findIndex(x=>x.id===p.id);i>=0?a[i]=p:a.push(p);sSet('rc_p',a);sbUpsert('rc_patients',{id:p.id,did:p.did||MY_DID(),org_id:p.org_id||MY_ORG(),data:p});return p;},
+  pDel:id=>{sSet('rc_p',(sGet('rc_p')||[]).filter(x=>x.id!==id));sbDelete('rc_patients',id);},
   eForPat:pid=>(sGet('rc_enc')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time)),
   eGet:id=>(sGet('rc_enc')||[]).find(x=>x.id===id)||null,
-  eSave:e=>{const a=sGet('rc_enc')||[],i=a.findIndex(x=>x.id===e.id);i>=0?a[i]=e:a.push(e);sSet('rc_enc',a);return e;},
-  eDel:id=>sSet('rc_enc',(sGet('rc_enc')||[]).filter(x=>x.id!==id)),
-  // Injections
+  eSave:e=>{const a=sGet('rc_enc')||[],i=a.findIndex(x=>x.id===e.id);i>=0?a[i]=e:a.push(e);sSet('rc_enc',a);sbUpsert('rc_encounters',{id:e.id,did:e.did||MY_DID(),org_id:e.org_id||MY_ORG(),pid:e.pid,data:e});return e;},
+  eDel:id=>{sSet('rc_enc',(sGet('rc_enc')||[]).filter(x=>x.id!==id));sbDelete('rc_encounters',id);},
   iAll:()=>{const r=sGet('rc_i')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
   iGet:id=>(sGet('rc_i')||[]).find(x=>x.id===id)||null,
   iForPat:pid=>(sGet('rc_i')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
-  iSave:i=>{const a=sGet('rc_i')||[],idx=a.findIndex(x=>x.id===i.id);idx>=0?a[idx]=i:a.push(i);sSet('rc_i',a);return i;},
-  iDel:id=>sSet('rc_i',(sGet('rc_i')||[]).filter(x=>x.id!==id)),
-  // Surgeries
+  iSave:i=>{const a=sGet('rc_i')||[],idx=a.findIndex(x=>x.id===i.id);idx>=0?a[idx]=i:a.push(i);sSet('rc_i',a);sbUpsert('rc_injections',{id:i.id,did:i.did||MY_DID(),org_id:i.org_id||MY_ORG(),pid:i.pid,data:i});return i;},
+  iDel:id=>{sSet('rc_i',(sGet('rc_i')||[]).filter(x=>x.id!==id));sbDelete('rc_injections',id);},
   sAll:()=>{const r=sGet('rc_s')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
   sxGet:id=>(sGet('rc_s')||[]).find(x=>x.id===id)||null,
   sForPat:pid=>(sGet('rc_s')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
-  sSave:s=>{const a=sGet('rc_s')||[],i=a.findIndex(x=>x.id===s.id);i>=0?a[i]=s:a.push(s);sSet('rc_s',a);return s;},
-  sDel:id=>sSet('rc_s',(sGet('rc_s')||[]).filter(x=>x.id!==id)),
-  // Citas (appointments)
+  sSave:s=>{const a=sGet('rc_s')||[],i=a.findIndex(x=>x.id===s.id);i>=0?a[i]=s:a.push(s);sSet('rc_s',a);sbUpsert('rc_surgeries',{id:s.id,did:s.did||MY_DID(),org_id:s.org_id||MY_ORG(),pid:s.pid,data:s});return s;},
+  sDel:id=>{sSet('rc_s',(sGet('rc_s')||[]).filter(x=>x.id!==id));sbDelete('rc_surgeries',id);},
   citaAll:   ()=>{const r=sGet('rc_citas')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
-  citaForPat:pid=>(sGet('rc_citas')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)),
-  citaSave:  c=>{const a=sGet('rc_citas')||[],i=a.findIndex(x=>x.id===c.id);i>=0?a[i]=c:a.push(c);sSet('rc_citas',a);return c;},
-  citaDel:   id=>sSet('rc_citas',(sGet('rc_citas')||[]).filter(x=>x.id!==id))
+  citaForPat:pid=>(sGet('rc_citas')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')),
+  citaSave:  c=>{const a=sGet('rc_citas')||[],i=a.findIndex(x=>x.id===c.id);i>=0?a[i]=c:a.push(c);sSet('rc_citas',a);sbUpsert('rc_citas',{id:c.id,did:c.did||MY_DID(),org_id:c.org_id||MY_ORG(),pid:c.pid,data:c});return c;},
+  citaDel:   id=>{sSet('rc_citas',(sGet('rc_citas')||[]).filter(x=>x.id!==id));sbDelete('rc_citas',id);}
 };
 
 // ══════════════ CONSTANTS ══════════════
@@ -1620,64 +1830,148 @@ function delInj(id,pid){if(!confirm('¿Eliminar esta inyección?'))return;DB.iDe
 // ══════════════ VIEW: SETTINGS ══════════════
 function vSettings(){
   const u=getUser(SESSION.uid)||{};
-  return PH('Mi Perfil','Actualice sus datos y contraseña')
-  +`<div class="ca"><div style="max-width:680px">
-    <div class="card pad mb14">
-      <div class="form-sec">Datos del Médico</div>
-      <form id="prf-form" onsubmit="submitProfile(event)">
-        <div class="form-row"><div class="fg"><label class="fl">Nombre Completo <span class="req">*</span></label><input class="fi" name="name" value="${esc(u.name||'')}" required></div>
-          <div class="fg"><label class="fl">Iniciales <span class="req">*</span></label><input class="fi" name="initials" value="${esc(u.initials||'')}" required maxlength="3" oninput="this.value=this.value.toUpperCase()"></div></div>
-        <div class="form-row"><div class="fg"><label class="fl">Especialidad</label><input class="fi" name="spec" value="${esc(u.spec||'')}" placeholder="Retina y Vítreo"></div>
-          <div class="fg"><label class="fl">Clínica</label><input class="fi" name="clinic" value="${esc(u.clinic||'')}"></div></div>
-        <div class="fg"><label class="fl">Email</label><div class="form-val">${esc(u.email||'—')}</div></div>
-        <div id="prf-err" style="display:none"></div>
-        <div class="form-actions"><button type="submit" class="btn btn-teal">💾 Guardar Perfil</button></div>
+  const sbUrl=SB_URL(), sbKey=SB_KEY(), connected=sbOK();
+  const st=sbStatus();
+  const stColor={online:'var(--green)',offline:'var(--g400)',error:'var(--red)'}[st];
+  const stLabel={online:'✅ Conectado y sincronizando',offline:'⚪ Sin configurar',error:'❌ Error de conexión'}[st];
+  const SQL_SCRIPT=`-- Ejecutar en Supabase Dashboard → SQL Editor
+create table if not exists rc_patients   (id text primary key, did text, org_id text, data jsonb);
+create table if not exists rc_injections (id text primary key, did text, org_id text, pid text, data jsonb);
+create table if not exists rc_surgeries  (id text primary key, did text, org_id text, pid text, data jsonb);
+create table if not exists rc_encounters (id text primary key, did text, org_id text, pid text, data jsonb);
+create table if not exists rc_citas      (id text primary key, did text, org_id text, pid text, data jsonb);
+create table if not exists rc_catalogs   (id text primary key, did text, org_id text, type text, data jsonb);`;
+
+  return PH('Configuración',`${SESSION.name} · ${u.spec||''}`)
+  +`<div class="ca"><div style="max-width:720px">
+
+  <!-- ─── BACKEND SUPABASE ─── -->
+  <div class="card pad mb14">
+    <div class="form-sec">☁ Backend — Base de Datos en la Nube</div>
+    <div class="alert alert-info mb14" style="line-height:1.7">
+      <strong>¿Para qué sirve esto?</strong> Conectar un backend guarda sus datos en la nube de forma permanente y segura.
+      Sus datos nunca se perderán si limpia el navegador y podrá acceder desde cualquier computadora.<br>
+      <strong>Es 100% gratuito</strong> para el uso clínico de un médico.
+    </div>
+
+    <!-- Status -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);margin-bottom:14px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${stColor};flex-shrink:0"></span>
+      <span style="font-size:13px;font-weight:600">${stLabel}</span>
+      ${connected?`<button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="syncNow()">🔄 Sincronizar ahora</button>`:''}
+    </div>
+
+    <!-- Step 1: Create Supabase account -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--g500);margin-bottom:8px">Paso 1 — Crear cuenta gratuita en Supabase</div>
+      <a href="https://supabase.com" target="_blank" class="btn btn-dark btn-sm">🌐 Abrir supabase.com →</a>
+      <div class="fhint" style="margin-top:6px">Haga clic en "Start your project" → regístrese con Google o email → cree un nuevo proyecto con nombre "RetinaClinics" → espere 2 minutos a que el proyecto se inicialice.</div>
+    </div>
+
+    <!-- Step 2: Create tables -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--g500);margin-bottom:8px">Paso 2 — Crear las tablas (copiar y pegar)</div>
+      <div style="font-size:12.5px;color:var(--g600);margin-bottom:8px">En el panel de Supabase, vaya a <strong>SQL Editor</strong> → pegue este código → haga clic en <strong>Run</strong>:</div>
+      <div style="position:relative">
+        <textarea class="ft" readonly style="font-family:monospace;font-size:11px;background:var(--g800);color:#a8d8a8;border-color:var(--g700);border-radius:5px;min-height:120px;resize:none">${esc(SQL_SCRIPT)}</textarea>
+        <button class="btn btn-ghost btn-xs" style="position:absolute;top:6px;right:6px" onclick="copySQL()">📋 Copiar</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Enter keys -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--g500);margin-bottom:8px">Paso 3 — Pegar sus credenciales</div>
+      <div style="font-size:12.5px;color:var(--g600);margin-bottom:10px">En Supabase vaya a <strong>Project Settings → API</strong> y copie los valores:</div>
+      <form id="sb-form" onsubmit="saveSbConfig(event)">
+        <div class="fg"><label class="fl">Project URL <span class="req">*</span></label>
+          <input class="fi" id="sb-url-in" type="url" value="${esc(sbUrl)}" placeholder="https://xxxxxxxxxxxx.supabase.co" required>
+          <div class="fhint">El que dice "Project URL" en la sección API</div></div>
+        <div class="fg"><label class="fl">Anon / Public Key <span class="req">*</span></label>
+          <input class="fi" id="sb-key-in" value="${esc(sbKey)}" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+          <div class="fhint">El que dice "anon public" — es seguro usarlo en el navegador</div></div>
+        <div id="sb-err" style="display:none" class="form-err"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="testSbConnection()">🔌 Probar Conexión</button>
+          <button type="submit" class="btn btn-teal btn-sm">💾 Guardar y Conectar</button>
+          ${connected?`<button type="button" class="btn btn-primary btn-sm" onclick="pushAllToSupabase()">☁ Subir todos mis datos ahora</button>`:''}
+          ${connected?`<button type="button" class="btn btn-danger btn-sm" onclick="disconnectSb()">✕ Desconectar</button>`:''}
+        </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ─── BACKUP LOCAL ─── -->
+  <div class="card pad mb14">
+    <div class="form-sec">💾 Backup Local — Exportar / Importar</div>
+    <div class="alert" style="background:var(--amber-l);border:1px solid #fde68a;font-size:12.5px;margin-bottom:12px">
+      ⚠ <strong>Haga backup regularmente</strong> mientras no tenga el backend configurado. Los datos en el navegador pueden perderse si limpia la caché.
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-teal btn-sm" onclick="exportData()">⬇ Exportar Backup (.json)</button>
+      <button class="btn btn-ghost btn-sm" onclick="importData()">⬆ Importar Backup</button>
+    </div>
+  </div>
+
+  <!-- ─── PERFIL ─── -->
+  <div class="card pad mb14">
+    <div class="form-sec">Datos del Médico</div>
+    <form id="prf-form" onsubmit="submitProfile(event)">
+      <div class="form-row"><div class="fg"><label class="fl">Nombre Completo <span class="req">*</span></label><input class="fi" name="name" value="${esc(u.name||'')}" required></div>
+        <div class="fg"><label class="fl">Iniciales <span class="req">*</span></label><input class="fi" name="initials" value="${esc(u.initials||'')}" required maxlength="3" oninput="this.value=this.value.toUpperCase()"></div></div>
+      <div class="form-row"><div class="fg"><label class="fl">Especialidad</label><input class="fi" name="spec" value="${esc(u.spec||'')}" placeholder="Retina y Vítreo"></div>
+        <div class="fg"><label class="fl">Clínica</label><input class="fi" name="clinic" value="${esc(u.clinic||'')}"></div></div>
+      <div class="fg"><label class="fl">Email</label><div class="form-val">${esc(u.email||'—')}</div></div>
+      <div id="prf-err" style="display:none"></div>
+      <div class="form-actions"><button type="submit" class="btn btn-teal">💾 Guardar Perfil</button></div>
+    </form>
+  </div>
+
+  <!-- ─── CONTRASEÑA ─── -->
+  <div class="card pad mb14">
+    <div class="form-sec">Cambiar Contraseña</div>
+    <form id="pwd-form" onsubmit="submitPwd(event)">
+      <div class="form-row"><div class="fg"><label class="fl">Contraseña Actual <span class="req">*</span></label><input class="fi" type="password" name="old_pwd" required></div><div></div></div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Nueva Contraseña <span class="req">*</span></label><input class="fi" type="password" name="new_pwd" required minlength="6"></div>
+        <div class="fg"><label class="fl">Confirmar <span class="req">*</span></label><input class="fi" type="password" name="new_pwd2" required></div>
+      </div>
+      <div id="pwd-err" style="display:none"></div>
+      <div class="form-actions"><button type="submit" class="btn btn-ghost">🔐 Cambiar Contraseña</button></div>
+    </form>
+  </div>
+
+  <!-- ─── CATÁLOGOS ─── -->
+  <div class="grid2" style="margin-top:0">
+    <div class="card pad">
+      <div class="form-sec">Diagnósticos (${getDiags().length})</div>
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <input class="fi fi-sm" id="new-diag-cfg" placeholder="Nuevo diagnóstico…" style="flex:1">
+        <button class="btn btn-teal btn-sm" onclick="addCatalogItem('diag')">+ Agregar</button>
+      </div>
+      <div style="max-height:240px;overflow-y:auto">
+        ${getDiags().map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 7px;border-radius:4px;font-size:12.5px" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
+          <span>${esc(d.name)}</span><button class="btn-icon" onclick="removeCatalogItem('diag','${d.id}')">🗑️</button>
+        </div>`).join('')||'<div class="empty-mini">Sin diagnósticos.</div>'}
+      </div>
     </div>
     <div class="card pad">
-      <div class="form-sec">Cambiar Contraseña</div>
-      <form id="pwd-form" onsubmit="submitPwd(event)">
-        <div class="form-row"><div class="fg"><label class="fl">Contraseña Actual <span class="req">*</span></label><input class="fi" type="password" name="old_pwd" required></div><div></div></div>
-        <div class="form-row">
-          <div class="fg"><label class="fl">Nueva Contraseña <span class="req">*</span></label><input class="fi" type="password" name="new_pwd" required minlength="6"></div>
-          <div class="fg"><label class="fl">Confirmar <span class="req">*</span></label><input class="fi" type="password" name="new_pwd2" required></div>
-        </div>
-        <div id="pwd-err" style="display:none"></div>
-        <div class="form-actions"><button type="submit" class="btn btn-ghost">🔐 Cambiar Contraseña</button></div>
-      </form>
-    </div>
-    <!-- CATALOGS -->
-    <div class="grid2" style="margin-top:14px">
-      <div class="card pad">
-        <div class="form-sec">Diagnósticos (${getDiags().length})</div>
-        <div style="display:flex;gap:7px;margin-bottom:10px">
-          <input class="fi fi-sm" id="new-diag-cfg" placeholder="Nuevo diagnóstico…" style="flex:1">
-          <button class="btn btn-teal btn-sm" onclick="addCatalogItem('diag')">+ Agregar</button>
-        </div>
-        <div style="max-height:260px;overflow-y:auto">
-          ${getDiags().map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;font-size:12.5px;transition:.1s" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
-            <span>${esc(d.name)}</span>
-            <button class="btn-icon" onclick="removeCatalogItem('diag','${d.id}')">🗑️</button>
-          </div>`).join('')||`<div class="empty-mini">Sin diagnósticos configurados.</div>`}
-        </div>
+      <div class="form-sec">Tipos de Cirugía (${getSxTipos().length})</div>
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <input class="fi fi-sm" id="new-sxt-cfg" placeholder="Nuevo procedimiento…" style="flex:1">
+        <button class="btn btn-teal btn-sm" onclick="addCatalogItem('sxt')">+ Agregar</button>
       </div>
-      <div class="card pad">
-        <div class="form-sec">Tipos de Cirugía (${getSxTipos().length})</div>
-        <div style="display:flex;gap:7px;margin-bottom:10px">
-          <input class="fi fi-sm" id="new-sxt-cfg" placeholder="Nuevo tipo de procedimiento…" style="flex:1">
-          <button class="btn btn-teal btn-sm" onclick="addCatalogItem('sxt')">+ Agregar</button>
-        </div>
-        <div style="max-height:260px;overflow-y:auto">
-          ${getSxTipos().map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;font-size:12.5px;transition:.1s" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
-            <span>${esc(t.name)}</span>
-            <button class="btn-icon" onclick="removeCatalogItem('sxt','${t.id}')">🗑️</button>
-          </div>`).join('')||`<div class="empty-mini">Sin tipos configurados.</div>`}
-        </div>
+      <div style="max-height:240px;overflow-y:auto">
+        ${getSxTipos().map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 7px;border-radius:4px;font-size:12.5px" onmouseenter="this.style.background='var(--g50)'" onmouseleave="this.style.background=''">
+          <span>${esc(t.name)}</span><button class="btn-icon" onclick="removeCatalogItem('sxt','${t.id}')">🗑️</button>
+        </div>`).join('')||'<div class="empty-mini">Sin tipos configurados.</div>'}
       </div>
     </div>
+  </div>
+
   </div></div>`;
 }
-async function submitProfile(e){
+
+function submitProfile(e){
   e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
   const errs=[];if(!d.name?.trim())errs.push('El nombre es obligatorio.');if(!d.initials?.trim())errs.push('Las iniciales son obligatorias.');
   const errDiv=document.getElementById('prf-err');
@@ -2731,6 +3025,62 @@ function vDashboard(){
   </div>`;
 }
 
+// ── Supabase settings actions ──
+function copySQL(){
+  const ta=document.querySelector('textarea[readonly]');
+  if(ta){navigator.clipboard.writeText(ta.value).then(()=>toast('✅ SQL copiado al portapapeles.','success'));}
+}
+async function testSbConnection(){
+  const url=(document.getElementById('sb-url-in')?.value||'').trim();
+  const key=(document.getElementById('sb-key-in')?.value||'').trim();
+  if(!url||!key){toast('⚠ Ingrese URL y clave primero.','warn');return;}
+  toast('🔌 Probando conexión…','');
+  const ok=await sbTestConnection(url,key);
+  if(ok){toast('✅ Conexión exitosa. Supabase responde correctamente.','success');}
+  else{toast('❌ No se pudo conectar. Verifique la URL y la clave.','error');}
+}
+function saveSbConfig(e){
+  e.preventDefault();
+  const url=(document.getElementById('sb-url-in')?.value||'').trim();
+  const key=(document.getElementById('sb-key-in')?.value||'').trim();
+  const errDiv=document.getElementById('sb-err');
+  if(!url||!url.startsWith('https://')){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML='<div>⚠ La URL debe comenzar con https://</div>';return;}
+  if(!key||key.length<20){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML='<div>⚠ La clave parece incorrecta (muy corta).</div>';return;}
+  sSet('rc_sb_url',url); sSet('rc_sb_key',key); sSet('rc_sb_status','offline');
+  toast('✅ Configuración guardada. Probando conexión…','success');
+  sbTestConnection(url,key).then(ok=>{
+    sSet('rc_sb_status',ok?'online':'error');
+    updateSbIndicator();
+    if(ok){
+      toast('☁ Conexión verificada. Sus datos ahora se sincronizan automáticamente.','success');
+      document.getElementById('view').innerHTML=renderView();
+    } else {
+      toast('⚠ Guardado pero la conexión falló. Verifique las credenciales.','warn');
+    }
+  });
+}
+function disconnectSb(){
+  if(!confirm('¿Desconectar el backend?\n\nSus datos locales permanecerán intactos, pero se dejarán de sincronizar.')) return;
+  sSet('rc_sb_url',''); sSet('rc_sb_key',''); sSet('rc_sb_status','offline');
+  updateSbIndicator();
+  toast('Backend desconectado.','warn');
+  document.getElementById('view').innerHTML=renderView();
+}
+async function syncNow(){
+  if(!sbOK()){toast('⚠ Configure el backend primero.','warn');return;}
+  toast('🔄 Sincronizando…','');
+  const pulled=await sbPull();
+  if(pulled){toast('✅ Sincronización completada.','success');nav('patients');}
+  else{toast('⚠ Sin datos nuevos en el servidor.','success');}
+}
+async function pushAllToSupabase(){
+  if(!sbOK()){toast('⚠ Configure el backend primero.','warn');return;}
+  toast('☁ Subiendo todos los datos…','');
+  const r=await sbPushAll();
+  if(r.ok){toast(`✅ ${r.total} registros subidos correctamente.`,'success');}
+  else{toast('❌ Error: '+r.msg,'error');}
+}
+
 function addCatalogItem(type){
   const inp=document.getElementById(`new-${type}-cfg`);const name=(inp?.value||'').trim();
   if(!name){toast('⚠ Ingrese un nombre.','warn');return;}
@@ -2807,6 +3157,9 @@ function showApp(){
   if(SESSION.role==='super_admin')document.getElementById('admin-dd').style.display='block';
   nav('patients');
   setTimeout(updateNotifBadge,100);
+  // Pull latest data from Supabase in background (non-blocking)
+  if(sbOK()){ sbPull().then(pulled=>{ if(pulled){ nav('patients'); toast('☁ Datos sincronizados desde backend.','success'); } }); }
+  updateSbIndicator();
 }
 
 function doLogin(){
