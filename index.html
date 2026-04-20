@@ -23,15 +23,7 @@
 html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g700);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
 
 /* LOGIN */
-#login-overlay{position:fixed;inset:0;background:var(--dk);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
-.login-box{background:var(--white);border-radius:14px;padding:40px 36px;width:420px;max-width:100%;box-shadow:0 28px 70px rgba(0,0,0,.4)}
-.login-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:26px}
-.login-mark{background:var(--dk);color:var(--teal);font-size:16px;font-weight:800;width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;letter-spacing:-.5px;border:2px solid var(--teal)}
-.login-title{font-size:21px;font-weight:700;color:var(--g800);letter-spacing:-.4px}
-.login-sub{font-size:12px;color:var(--g500);margin-top:3px}
-.login-hint{background:var(--blue-l);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue);margin-bottom:16px;line-height:1.6}
-.login-hint strong{display:block;margin-bottom:2px}
-.login-err{background:var(--red-l);border:1px solid #fed7d7;border-radius:var(--r);padding:9px 12px;font-size:12.5px;color:var(--red);margin-top:10px;display:none}
+/* login CSS moved to Phase 1 block */
 
 /* TOP BAR */
 #top-bar{position:fixed;top:0;left:0;right:0;height:var(--topH);background:var(--dk);display:flex;align-items:center;padding:0 16px;z-index:200;border-bottom:1px solid var(--dk-b)}
@@ -434,6 +426,20 @@ html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g
 .sx-pendiente_economico{background:var(--amber-l);color:var(--amber)}
 .sx-realizada{background:var(--green-l);color:var(--green)}
 .sx-cancelada{background:var(--g100);color:var(--g500)}
+/* ══ PHASE 1: Auth screens & plans ══ */
+#login-overlay{position:fixed;inset:0;background:var(--dk);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.login-box{background:var(--white);border-radius:14px;padding:36px 32px;width:420px;max-width:100%;box-shadow:0 28px 70px rgba(0,0,0,.4)}
+.login-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:22px}
+.login-mark{background:var(--dk);color:var(--teal);font-size:16px;font-weight:800;width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;letter-spacing:-.5px;border:2px solid var(--teal)}
+.login-title{font-size:21px;font-weight:700;color:var(--g800);letter-spacing:-.4px}
+.login-sub{font-size:12px;color:var(--g500);margin-top:3px;text-align:center}
+.login-hint{background:var(--blue-l);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue);margin-bottom:16px;line-height:1.6}
+.login-hint strong{display:block;margin-bottom:2px}
+.login-err{background:var(--red-l);border:1px solid #fed7d7;border-radius:var(--r);padding:9px 12px;font-size:12.5px;color:var(--red);margin-top:10px;display:none}
+/* Plan cards hover */
+#plan-trial:hover,#plan-solo:hover,#plan-clinic:hover{opacity:.9}
+/* Subscription trial banner */
+.trial-banner{background:var(--amber-l);border:1px solid var(--amber);border-radius:var(--r);padding:8px 14px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;margin-bottom:4px}
 /* QX CARD in HC tab */
 .sx-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
 .sx-card:hover{border-color:var(--g300)}
@@ -444,17 +450,130 @@ html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g
 <body>
 
 <div id="login-overlay">
-  <div class="login-box">
+  <!-- Language toggle -->
+  <div style="position:absolute;top:18px;right:18px;display:flex;gap:6px">
+    <button onclick="setLang('es')" id="lang-es" style="padding:4px 10px;border-radius:20px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:700;cursor:pointer">ES</button>
+    <button onclick="setLang('en')" id="lang-en" style="padding:4px 10px;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer">EN</button>
+  </div>
+
+  <!-- SCREEN: login/register -->
+  <div id="auth-screen" class="login-box">
     <div class="login-brand">
       <div class="login-mark">RC</div>
       <div class="login-title">RetinaClinics HC</div>
-      <div class="login-sub">Historia Clínica Electrónica · Retina &amp; Vítreo</div>
+      <div class="login-sub" id="txt-sub">Historia Clínica Electrónica · Retina &amp; Vítreo</div>
     </div>
-    <div class="login-hint"><strong>Cuentas de demo:</strong>Admin: admin@retinaclinics.com / admin123<br>Doctor: doctor@retinaclinics.com / demo123</div>
-    <div class="fg"><label class="fl">Correo Electrónico</label><input class="fi" type="email" id="login-email" placeholder="correo@clinica.com" autocomplete="email"></div>
-    <div class="fg"><label class="fl">Contraseña</label><input class="fi" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-teal btn-full" style="margin-top:4px;padding:10px" onclick="doLogin()" id="login-btn">Ingresar al Sistema</button>
-    <div class="login-err" id="login-err"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;margin-bottom:18px;border-radius:8px;overflow:hidden;border:1.5px solid var(--g200)">
+      <button id="tab-login" onclick="switchTab('login')" style="flex:1;padding:8px;border:none;background:var(--dk);color:var(--white);font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer" data-t="tab_login">Ingresar</button>
+      <button id="tab-register" onclick="switchTab('register')" style="flex:1;padding:8px;border:none;background:transparent;color:var(--g500);font-family:var(--fn);font-size:13px;cursor:pointer" data-t="tab_register">Crear cuenta</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="login-form">
+      <div class="login-hint" id="demo-hint"><strong>Demo:</strong> doctor@retinaclinics.com / demo123</div>
+      <div class="fg"><label class="fl" data-t="email">Correo Electrónico</label><input class="fi" type="email" id="login-email" placeholder="correo@clinica.com" autocomplete="email"></div>
+      <div class="fg"><label class="fl" data-t="password">Contraseña</label><input class="fi" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-teal btn-full" style="margin-top:4px;padding:10px" onclick="doLogin()" id="login-btn" data-t="btn_login">Ingresar al Sistema</button>
+      <div class="login-err" id="login-err"></div>
+      <button onclick="showForgotPwd()" style="background:none;border:none;color:var(--g400);font-size:12px;cursor:pointer;width:100%;text-align:center;margin-top:8px" data-t="forgot_pwd">¿Olvidaste tu contraseña?</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" style="display:none">
+      <div class="form-row" style="gap:8px">
+        <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="full_name">Nombre completo</label><input class="fi" type="text" id="reg-name" placeholder="Dr. Juan García"></div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="initials">Iniciales</label><input class="fi" type="text" id="reg-initials" placeholder="JG" maxlength="3" style="text-transform:uppercase"></div>
+      </div>
+      <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="email">Correo Electrónico</label><input class="fi" type="email" id="reg-email" placeholder="correo@clinica.com"></div>
+      <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="clinic">Clínica / Hospital</label><input class="fi" type="text" id="reg-clinic" placeholder="Centro Oftalmológico San Juan"></div>
+      <div class="form-row" style="gap:8px">
+        <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="country">País</label>
+          <select class="fs" id="reg-country">
+            <option value="PY">🇵🇾 Paraguay</option><option value="AR">🇦🇷 Argentina</option><option value="CO">🇨🇴 Colombia</option>
+            <option value="MX">🇲🇽 México</option><option value="PE">🇵🇪 Perú</option><option value="CL">🇨🇱 Chile</option>
+            <option value="EC">🇪🇨 Ecuador</option><option value="BO">🇧🇴 Bolivia</option><option value="VE">🇻🇪 Venezuela</option>
+            <option value="BR">🇧🇷 Brasil</option><option value="US">🇺🇸 EE.UU.</option><option value="ES">🇪🇸 España</option>
+            <option value="DE">🇩🇪 Alemania</option><option value="FR">🇫🇷 Francia</option><option value="OTHER">🌐 Otro</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="specialty">Especialidad</label>
+          <select class="fs" id="reg-spec">
+            <option>Retina y Vítreo</option><option>Oftalmología General</option><option>Glaucoma</option><option>Córnea</option><option>Oculoplástica</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:8px"><label class="fl" data-t="password">Contraseña</label><input class="fi" type="password" id="reg-pwd" placeholder="Mínimo 8 caracteres"></div>
+      <button class="btn btn-teal btn-full" style="margin-top:4px;padding:10px" onclick="doRegister()" id="reg-btn" data-t="btn_register">Crear cuenta gratuita</button>
+      <div class="login-err" id="reg-err"></div>
+      <p style="font-size:11px;color:var(--g400);text-align:center;margin-top:10px" data-t="trial_note">30 días gratis · Sin tarjeta de crédito · Cancela cuando quieras</p>
+    </div>
+  </div>
+
+  <!-- SCREEN: Onboarding wizard (after register) -->
+  <div id="onboarding-screen" class="login-box" style="display:none;max-width:480px">
+    <div class="login-brand" style="margin-bottom:16px">
+      <div class="login-mark">RC</div>
+      <div class="login-title" data-t="welcome_title">¡Bienvenido a RetinaClinics!</div>
+      <div class="login-sub" id="ob-step-label">Paso 1 de 2</div>
+    </div>
+    <!-- Step indicators -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;justify-content:center">
+      <div id="ob-dot-1" style="width:28px;height:5px;border-radius:3px;background:var(--teal)"></div>
+      <div id="ob-dot-2" style="width:28px;height:5px;border-radius:3px;background:var(--g200)"></div>
+    </div>
+
+    <!-- Step 1: Confirm profile -->
+    <div id="ob-step-1">
+      <p style="font-size:13px;color:var(--g500);margin-bottom:16px" data-t="ob_step1_desc">Confirma los datos de tu perfil médico:</p>
+      <div class="fg" style="margin-bottom:10px"><label class="fl" data-t="full_name">Nombre completo</label><input class="fi" type="text" id="ob-name" placeholder="Dr. Juan García"></div>
+      <div class="fg" style="margin-bottom:10px"><label class="fl" data-t="specialty">Especialidad</label><input class="fi" type="text" id="ob-spec" placeholder="Retina y Vítreo"></div>
+      <div class="fg" style="margin-bottom:10px"><label class="fl" data-t="clinic">Clínica / Hospital</label><input class="fi" type="text" id="ob-clinic" placeholder="Centro Oftalmológico"></div>
+      <button class="btn btn-teal btn-full" style="padding:10px;margin-top:6px" onclick="obNext(1)" data-t="btn_continue">Continuar →</button>
+    </div>
+
+    <!-- Step 2: Plan selection -->
+    <div id="ob-step-2" style="display:none">
+      <p style="font-size:13px;color:var(--g500);margin-bottom:14px" data-t="ob_step2_desc">Elige tu plan. Cancela en cualquier momento.</p>
+      <div style="display:grid;gap:10px">
+        <div onclick="selectPlan('trial')" id="plan-trial" style="border:2px solid var(--teal);border-radius:8px;padding:14px;cursor:pointer;background:var(--teal-bg)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong style="font-size:14px" data-t="plan_trial">30 días GRATIS</strong><div style="font-size:12px;color:var(--g500);margin-top:2px" data-t="plan_trial_desc">Sin tarjeta de crédito requerida</div></div>
+            <div style="font-size:22px;font-weight:700;color:var(--teal)" data-t="plan_trial_price">$0</div>
+          </div>
+        </div>
+        <div onclick="selectPlan('solo')" id="plan-solo" style="border:1.5px solid var(--g200);border-radius:8px;padding:14px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong style="font-size:14px">Plan Solo</strong><div style="font-size:12px;color:var(--g500);margin-top:2px" data-t="plan_solo_desc">1 médico, pacientes ilimitados</div></div>
+            <div style="text-align:right"><div style="font-size:22px;font-weight:700">$49</div><div style="font-size:10px;color:var(--g400)" data-t="per_month">/mes USD</div></div>
+          </div>
+        </div>
+        <div onclick="selectPlan('clinic')" id="plan-clinic" style="border:1.5px solid var(--g200);border-radius:8px;padding:14px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="display:flex;align-items:center;gap:6px"><strong style="font-size:14px">Plan Clínica</strong><span style="background:var(--blue-l);color:var(--blue);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px" data-t="most_popular">Más popular</span></div>
+              <div style="font-size:12px;color:var(--g500);margin-top:2px" data-t="plan_clinic_desc">Hasta 5 médicos + app móvil</div>
+            </div>
+            <div style="text-align:right"><div style="font-size:22px;font-weight:700">$129</div><div style="font-size:10px;color:var(--g400)" data-t="per_month">/mes USD</div></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-teal btn-full" style="padding:10px;margin-top:14px" onclick="obFinish()" id="ob-finish-btn" data-t="btn_start_trial">Comenzar gratis →</button>
+      <p style="font-size:11px;color:var(--g400);text-align:center;margin-top:8px" data-t="no_card">Sin tarjeta · Cancela cuando quieras</p>
+    </div>
+  </div>
+
+  <!-- SCREEN: Password reset -->
+  <div id="forgot-screen" class="login-box" style="display:none">
+    <div class="login-brand" style="margin-bottom:16px">
+      <div class="login-mark">RC</div>
+      <div class="login-title" data-t="forgot_title">Recuperar contraseña</div>
+    </div>
+    <p style="font-size:13px;color:var(--g500);margin-bottom:14px" data-t="forgot_desc">Ingresa tu email y te enviaremos las instrucciones de recuperación.</p>
+    <div class="fg"><label class="fl" data-t="email">Correo Electrónico</label><input class="fi" type="email" id="forgot-email" placeholder="correo@clinica.com"></div>
+    <button class="btn btn-teal btn-full" style="margin-top:8px;padding:10px" onclick="doForgotPwd()" data-t="btn_send_reset">Enviar instrucciones</button>
+    <button onclick="showLoginScreen()" style="background:none;border:none;color:var(--g400);font-size:12px;cursor:pointer;width:100%;text-align:center;margin-top:10px" data-t="back_login">← Volver al inicio de sesión</button>
+    <div class="login-err" id="forgot-msg"></div>
   </div>
 </div>
 
@@ -466,6 +585,7 @@ html,body{height:100%;font-family:var(--fn);background:var(--g100);color:var(--g
     <div class="tb-doc"><strong id="tb-name">—</strong><span id="tb-spec" style="color:var(--g500)">—</span></div>
     <div class="tb-date" id="tb-date">—</div>
     <div class="tb-nav">
+      <button onclick="toggleLang()" id="tb-lang-btn" style="padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--g300);font-size:11px;font-weight:700;cursor:pointer;margin-right:4px">🌐 ES</button>
       <div class="dd">
         <button class="tb-btn" onclick="toggleDD(this)">👤 Paciente ▾</button>
         <div class="dd-menu">
@@ -737,13 +857,15 @@ function importData(){
         arr.forEach(r=>{ const i=current.findIndex(x=>x.id===r.id); i>=0?current[i]=r:current.push(r); });
         sSet(key, current);
       };
-      merge('rc_p',     bk.patients   ||[]);
-      merge('rc_i',     bk.injections ||[]);
-      merge('rc_s',     bk.surgeries  ||[]);
-      merge('rc_enc',   bk.encounters ||[]);
-      merge('rc_citas', bk.citas      ||[]);
-      merge('rc_diags', bk.diags      ||[]);
-      merge('rc_sxt',   bk.sxtypes    ||[]);
+      // F5: Sanitize imported records - reassign ownership to current user
+      const sanitize=arr=>(arr||[]).map(r=>({...r,did:MY_DID(),org_id:MY_ORG()}));
+      merge('rc_p',     sanitize(bk.patients));
+      merge('rc_i',     sanitize(bk.injections));
+      merge('rc_s',     sanitize(bk.surgeries));
+      merge('rc_enc',   sanitize(bk.encounters));
+      merge('rc_citas', sanitize(bk.citas));
+      merge('rc_diags', sanitize(bk.diags));
+      merge('rc_sxt',   sanitize(bk.sxtypes));
       toast('✅ Datos importados correctamente. Recargando…','success');
       setTimeout(()=>location.reload(), 1500);
     }catch(err){
@@ -783,7 +905,19 @@ const deleteUser=uid=>sSet('rc_users',getAllUsers().filter(u=>u.id!==uid));
 const getAllOrgs=()=>sGet('rc_orgs')||[];
 const saveOrg=o=>{const a=getAllOrgs(),i=a.findIndex(x=>x.id===o.id);i>=0?a[i]=o:a.push(o);sSet('rc_orgs',a);return o;};
 function setSession(u){SESSION={uid:u.id,org_id:u.org_id,role:u.role,name:u.name,initials:u.initials||u.name.substring(0,2).toUpperCase(),spec:u.spec||'',clinic:u.clinic||''};sSet('rc_session',SESSION);}
-function loadSession(){const s=sGet('rc_session');if(s&&s.uid&&getUser(s.uid)){SESSION=s;return true;}return false;}
+function loadSession(){
+  const s=sGet('rc_session');
+  if(s&&s.uid){
+    const user=getUser(s.uid);
+    if(user&&user.active!==false){
+      SESSION={uid:user.id,org_id:user.org_id,role:user.role,name:user.name,
+               initials:user.initials||user.name.substring(0,2).toUpperCase(),
+               spec:user.spec||'',clinic:user.clinic||''};
+      return true;
+    }
+  }
+  return false;
+}
 function logout(){sSet('rc_session',null);SESSION={uid:null};location.reload();}
 const MY_DID=()=>SESSION.uid;
 const MY_ORG=()=>SESSION.org_id;
@@ -818,20 +952,20 @@ const diagSel=(val='',sid='sd',aid='d')=>`
 // ══════════════ DATABASE ══════════════
 const DB={
   pAll:()=>{const r=sGet('rc_p')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
-  pGet:id=>(sGet('rc_p')||[]).find(x=>x.id===id)||null,
+  pGet:id=>{const r=(sGet('rc_p')||[]).find(x=>x.id===id);if(!r)return null;if(SESSION.role==='super_admin'||r.did===MY_DID())return r;return null;},
   pSave:p=>{const a=sGet('rc_p')||[],i=a.findIndex(x=>x.id===p.id);i>=0?a[i]=p:a.push(p);sSet('rc_p',a);sbUpsert('rc_patients',{id:p.id,did:p.did||MY_DID(),org_id:p.org_id||MY_ORG(),data:p});return p;},
   pDel:id=>{sSet('rc_p',(sGet('rc_p')||[]).filter(x=>x.id!==id));sbDelete('rc_patients',id);},
   eForPat:pid=>(sGet('rc_enc')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time)),
-  eGet:id=>(sGet('rc_enc')||[]).find(x=>x.id===id)||null,
+  eGet:id=>{const r=(sGet('rc_enc')||[]).find(x=>x.id===id);if(!r)return null;if(SESSION.role==='super_admin'||r.did===MY_DID())return r;return null;},
   eSave:e=>{const a=sGet('rc_enc')||[],i=a.findIndex(x=>x.id===e.id);i>=0?a[i]=e:a.push(e);sSet('rc_enc',a);sbUpsert('rc_encounters',{id:e.id,did:e.did||MY_DID(),org_id:e.org_id||MY_ORG(),pid:e.pid,data:e});return e;},
   eDel:id=>{sSet('rc_enc',(sGet('rc_enc')||[]).filter(x=>x.id!==id));sbDelete('rc_encounters',id);},
   iAll:()=>{const r=sGet('rc_i')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
-  iGet:id=>(sGet('rc_i')||[]).find(x=>x.id===id)||null,
+  iGet:id=>{const r=(sGet('rc_i')||[]).find(x=>x.id===id);if(!r)return null;if(SESSION.role==='super_admin'||r.did===MY_DID())return r;return null;},
   iForPat:pid=>(sGet('rc_i')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
   iSave:i=>{const a=sGet('rc_i')||[],idx=a.findIndex(x=>x.id===i.id);idx>=0?a[idx]=i:a.push(i);sSet('rc_i',a);sbUpsert('rc_injections',{id:i.id,did:i.did||MY_DID(),org_id:i.org_id||MY_ORG(),pid:i.pid,data:i});return i;},
   iDel:id=>{sSet('rc_i',(sGet('rc_i')||[]).filter(x=>x.id!==id));sbDelete('rc_injections',id);},
   sAll:()=>{const r=sGet('rc_s')||[];return SESSION.role==='super_admin'?r:r.filter(x=>x.did===MY_DID());},
-  sxGet:id=>(sGet('rc_s')||[]).find(x=>x.id===id)||null,
+  sxGet:id=>{const r=(sGet('rc_s')||[]).find(x=>x.id===id);if(!r)return null;if(SESSION.role==='super_admin'||r.did===MY_DID())return r;return null;},
   sForPat:pid=>(sGet('rc_s')||[]).filter(x=>x.pid===pid&&(SESSION.role==='super_admin'||x.did===MY_DID())).sort((a,b)=>a.date.localeCompare(b.date)),
   sSave:s=>{const a=sGet('rc_s')||[],i=a.findIndex(x=>x.id===s.id);i>=0?a[i]=s:a.push(s);sSet('rc_s',a);sbUpsert('rc_surgeries',{id:s.id,did:s.did||MY_DID(),org_id:s.org_id||MY_ORG(),pid:s.pid,data:s});return s;},
   sDel:id=>{sSet('rc_s',(sGet('rc_s')||[]).filter(x=>x.id!==id));sbDelete('rc_surgeries',id);},
@@ -1983,7 +2117,7 @@ function submitProfile(e){
 }
 function submitPwd(e){
   e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
-  const errs=[];if(!d.old_pwd)errs.push('Ingrese contraseña actual.');if(!d.new_pwd||d.new_pwd.length<6)errs.push('Mínimo 6 caracteres.');if(d.new_pwd!==d.new_pwd2)errs.push('Las contraseñas no coinciden.');
+  const errs=[];if(!d.old_pwd)errs.push('Ingrese contraseña actual.');if(!d.new_pwd||d.new_pwd.length<8)errs.push('Mínimo 8 caracteres.');if(d.new_pwd!==d.new_pwd2)errs.push('Las contraseñas no coinciden.');
   const errDiv=document.getElementById('pwd-err');
   if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
   const u=getUser(SESSION.uid);const oldHash=hashPwd(d.old_pwd);
@@ -2046,7 +2180,7 @@ function vAdmin(){
 function showAddDoc(){const el=document.getElementById('add-doc-wrap');if(el){el.style.display='block';el.scrollIntoView({behavior:'smooth'});}}
 function submitAddDoc(e){
   e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
-  const errs=[];if(!d.name?.trim())errs.push('El nombre es obligatorio.');if(!d.email?.trim())errs.push('El email es obligatorio.');if(!d.pwd||d.pwd.length<6)errs.push('Contraseña mínimo 6 caracteres.');if(d.pwd!==d.pwd2)errs.push('Las contraseñas no coinciden.');if(getUserByEmail(d.email))errs.push(`Email ${esc(d.email)} ya registrado.`);
+  const errs=[];if(!d.name?.trim())errs.push('El nombre es obligatorio.');if(!d.email?.trim())errs.push('El email es obligatorio.');if(!d.pwd||d.pwd.length<8)errs.push('Contraseña mínimo 8 caracteres.');if(d.pwd!==d.pwd2)errs.push('Las contraseñas no coinciden.');if(getUserByEmail(d.email))errs.push(`Email ${esc(d.email)} ya registrado.`);
   const errDiv=document.getElementById('add-doc-err');
   if(errs.length){errDiv.className='form-err';errDiv.style.display='block';errDiv.innerHTML=errs.map(x=>`<div>⚠ ${x}</div>`).join('');return;}
   saveUser({id:genId(),org_id:MY_ORG(),email:d.email.trim().toLowerCase(),name:d.name.trim(),initials:(d.initials||d.name.substring(0,2)).toUpperCase(),spec:d.spec.trim(),clinic:d.clinic.trim(),role:d.role||'doctor',pwd:hashPwd(d.pwd),createdAt:today(),active:true});
@@ -3160,28 +3294,338 @@ function showApp(){
   // Pull latest data from Supabase in background (non-blocking)
   if(sbOK()){ sbPull().then(pulled=>{ if(pulled){ nav('patients'); toast('☁ Datos sincronizados desde backend.','success'); } }); }
   updateSbIndicator();
+  // F7: Check trial expiry and show banner
+  checkTrialExpiry();
+  showTrialBanner();
+  // Apply language preference
+  const savedLang = sGet('rc_lang') || SESSION.lang || 'es';
+  if(savedLang !== CURRENT_LANG) setLang(savedLang);
 }
+
+function checkTrialExpiry(){
+  if(SESSION.role==='super_admin') return true;
+  const org=(sGet('rc_orgs')||[]).find(o=>o.id===SESSION.org_id);
+  if(!org||!org.trialEnds||org.plan==='solo'||org.plan==='clinic') return true;
+  const expired=new Date(org.trialEnds)<new Date();
+  if(expired){
+    // Show expired paywall overlay
+    let pw=document.getElementById('paywall-overlay');
+    if(!pw){
+      pw=document.createElement('div');
+      pw.id='paywall-overlay';
+      pw.style.cssText='position:fixed;inset:0;background:rgba(26,37,64,.92);z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px';
+      const lang=CURRENT_LANG==='en';
+      pw.innerHTML=`<div style="background:#fff;border-radius:14px;padding:40px 36px;width:420px;max-width:100%;text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">⏰</div>
+        <h2 style="font-size:20px;font-weight:700;color:#1a2540;margin-bottom:8px">${lang?'Your free trial has ended':'Tu prueba gratuita ha terminado'}</h2>
+        <p style="font-size:13px;color:#718096;margin-bottom:24px;line-height:1.6">${lang?'Subscribe to continue accessing your patients and clinical records.':'Suscríbete para continuar accediendo a tus pacientes e historias clínicas.'}</p>
+        <div style="display:grid;gap:10px">
+          <div style="border:1.5px solid #e2e8f0;border-radius:8px;padding:14px;text-align:left;cursor:pointer" onclick="window.open('https://buy.stripe.com/SOLO_PLAN_LINK','_blank')">
+            <div style="display:flex;justify-content:space-between"><strong>Plan Solo</strong><strong>$49/mes</strong></div>
+            <div style="font-size:12px;color:#718096;margin-top:3px">${lang?'1 physician, unlimited patients':'1 médico, pacientes ilimitados'}</div>
+          </div>
+          <div style="border:2px solid #0bc5ea;border-radius:8px;padding:14px;text-align:left;cursor:pointer;background:#e6f7fa" onclick="window.open('https://buy.stripe.com/CLINIC_PLAN_LINK','_blank')">
+            <div style="display:flex;justify-content:space-between"><strong>Plan Clínica</strong><strong>$129/mes</strong></div>
+            <div style="font-size:12px;color:#718096;margin-top:3px">${lang?'Up to 5 physicians + mobile app':'Hasta 5 médicos + app móvil'}</div>
+          </div>
+        </div>
+        <button onclick="document.getElementById('paywall-overlay').remove();nav('settings')" style="margin-top:14px;background:none;border:none;color:#718096;font-size:12px;cursor:pointer">${lang?'I already subscribed — enter my key':'Ya me suscribí — ingresar mi clave'}</button>
+      </div>`;
+      document.body.appendChild(pw);
+    }
+    return false;
+  }
+  return true;
+}
+
+function showTrialBanner(){
+  const org = (sGet('rc_orgs')||[]).find(o=>o.id===SESSION.org_id);
+  if(!org || !org.trialEnds) return;
+  const today_d = new Date(today()), trial_d = new Date(org.trialEnds);
+  const daysLeft = Math.ceil((trial_d - today_d) / (1000*60*60*24));
+  if(daysLeft <= 0 || daysLeft > 30) return;
+  const msg = CURRENT_LANG==='en'
+    ? `⏳ Free trial: ${daysLeft} day${daysLeft===1?'':'s'} remaining. <a href="#" onclick="nav('settings')" style="color:var(--amber);font-weight:700">Upgrade now →</a>`
+    : `⏳ Prueba gratuita: ${daysLeft} día${daysLeft===1?'':'s'} restante${daysLeft===1?'':'s'}. <a href="#" onclick="nav('settings')" style="color:var(--amber);font-weight:700">Suscribirse →</a>`;
+  // Remove old banner if any
+  document.querySelectorAll('.trial-banner').forEach(b=>b.remove());
+  if(daysLeft <= 7){
+    const banner = document.createElement('div');
+    banner.className = 'trial-banner';
+    banner.innerHTML = msg;
+    banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:999;min-width:320px;text-align:center';
+    document.body.appendChild(banner);
+  }
+}
+
+// ── Brute force protection ──
+const _LOGIN_ATTEMPTS = {};
+function _checkBruteForce(email){
+  const a = _LOGIN_ATTEMPTS[email] || {count:0, lockedUntil:0};
+  if(Date.now() < a.lockedUntil){
+    const secs = Math.ceil((a.lockedUntil - Date.now())/1000);
+    return CURRENT_LANG==='en'
+      ? `Too many attempts. Wait ${secs}s before trying again.`
+      : `Demasiados intentos. Espera ${secs}s antes de intentar de nuevo.`;
+  }
+  return null;
+}
+function _recordFailedAttempt(email){
+  const a = _LOGIN_ATTEMPTS[email] || {count:0, lockedUntil:0};
+  a.count++;
+  if(a.count >= 5){
+    const penalty = Math.min((a.count - 4) * 30000, 300000); // 30s..5min cap
+    a.lockedUntil = Date.now() + penalty;
+  }
+  _LOGIN_ATTEMPTS[email] = a;
+}
+function _resetAttempts(email){ delete _LOGIN_ATTEMPTS[email]; }
 
 function doLogin(){
   const btn=document.getElementById('login-btn'),errDiv=document.getElementById('login-err');
   const email=document.getElementById('login-email').value.trim(),pwd=document.getElementById('login-pwd').value;
-  if(!email||!pwd){errDiv.style.display='block';errDiv.textContent='⚠ Complete email y contraseña.';return;}
-  btn.disabled=true;btn.textContent='Verificando…';errDiv.style.display='none';
+  if(!email||!pwd){errDiv.style.display='block';errDiv.textContent='⚠ '+(CURRENT_LANG==='en'?'Enter email and password.':'Completa email y contraseña.');return;}
+  // F4: Check brute force lockout
+  const lockMsg=_checkBruteForce(email);
+  if(lockMsg){errDiv.style.display='block';errDiv.textContent='⚠ '+lockMsg;return;}
+  btn.disabled=true;btn.textContent=CURRENT_LANG==='en'?'Signing in…':'Verificando…';errDiv.style.display='none';
   try{
     const user=getUserByEmail(email);
-    if(!user)throw new Error('Email no registrado en el sistema.');
+    if(!user){_recordFailedAttempt(email);throw new Error(CURRENT_LANG==='en'?'Email not registered.':'Email no registrado en el sistema.');}
     const hash=hashPwd(pwd);
-    if(hash!==user.pwd)throw new Error('Contraseña incorrecta.');
-    if(user.active===false)throw new Error('Esta cuenta está desactivada.');
+    if(hash!==user.pwd){_recordFailedAttempt(email);throw new Error(CURRENT_LANG==='en'?'Incorrect password.':'Contraseña incorrecta.');}
+    if(user.active===false)throw new Error(CURRENT_LANG==='en'?'This account is disabled.':'Esta cuenta está desactivada.');
+    _resetAttempts(email);
     setSession(user);showApp();
   }catch(err){
     errDiv.style.display='block';errDiv.textContent='⚠ '+err.message;
-    btn.disabled=false;btn.textContent='Ingresar al Sistema';
+    btn.disabled=false;btn.textContent=T('btn_login');
   }
 }
 
 
-function boot(){seedIfNeeded();if(loadSession()){showApp();}else{document.getElementById('login-overlay').style.display='flex';}}
+// ══════════════ i18n ══════════════
+const LANGS = {
+  es:{
+    tab_login:'Ingresar', tab_register:'Crear cuenta', email:'Correo Electrónico',
+    password:'Contraseña', btn_login:'Ingresar al Sistema', forgot_pwd:'¿Olvidaste tu contraseña?',
+    full_name:'Nombre completo', initials:'Iniciales', clinic:'Clínica / Hospital',
+    country:'País', specialty:'Especialidad', btn_register:'Crear cuenta gratuita',
+    trial_note:'30 días gratis · Sin tarjeta de crédito · Cancela cuando quieras',
+    welcome_title:'¡Bienvenido a RetinaClinics!', ob_step1_desc:'Confirma los datos de tu perfil médico:',
+    btn_continue:'Continuar →', ob_step2_desc:'Elige tu plan. Cancela en cualquier momento.',
+    plan_trial:'30 días GRATIS', plan_trial_desc:'Sin tarjeta de crédito requerida',
+    plan_solo_desc:'1 médico, pacientes ilimitados',
+    plan_clinic_desc:'Hasta 5 médicos + app móvil',
+    most_popular:'Más popular', per_month:'/mes USD',
+    btn_start_trial:'Comenzar gratis →', no_card:'Sin tarjeta · Cancela cuando quieras',
+    forgot_title:'Recuperar contraseña', forgot_desc:'Ingresa tu email y te enviaremos las instrucciones.',
+    btn_send_reset:'Enviar instrucciones', back_login:'← Volver al inicio de sesión',
+    txt_sub:'Historia Clínica Electrónica · Retina & Vítreo',
+    plan_trial_price:'$0'
+  },
+  en:{
+    tab_login:'Sign In', tab_register:'Create Account', email:'Email Address',
+    password:'Password', btn_login:'Sign In to System', forgot_pwd:'Forgot your password?',
+    full_name:'Full name', initials:'Initials', clinic:'Clinic / Hospital',
+    country:'Country', specialty:'Specialty', btn_register:'Create free account',
+    trial_note:'30 days free · No credit card required · Cancel anytime',
+    welcome_title:'Welcome to RetinaClinics!', ob_step1_desc:'Confirm your medical profile:',
+    btn_continue:'Continue →', ob_step2_desc:'Choose your plan. Cancel anytime.',
+    plan_trial:'30 Days FREE', plan_trial_desc:'No credit card required',
+    plan_solo_desc:'1 physician, unlimited patients',
+    plan_clinic_desc:'Up to 5 physicians + mobile app',
+    most_popular:'Most popular', per_month:'/month USD',
+    btn_start_trial:'Start for free →', no_card:'No card · Cancel anytime',
+    forgot_title:'Reset Password', forgot_desc:'Enter your email and we will send reset instructions.',
+    btn_send_reset:'Send instructions', back_login:'← Back to sign in',
+    txt_sub:'Electronic Health Record · Retina & Vitreous',
+    plan_trial_price:'$0'
+  }
+};
+let CURRENT_LANG = sGet('rc_lang') || 'es';
+
+function setLang(lang){
+  CURRENT_LANG = lang;
+  sSet('rc_lang', lang);
+  const t = LANGS[lang];
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    if(t[key]) el.textContent = t[key];
+  });
+  // Update login placeholder
+  const eml = document.getElementById('login-email');
+  if(eml) eml.placeholder = lang==='en'?'doctor@clinic.com':'correo@clinica.com';
+  // Active button
+  const esBtn = document.getElementById('lang-es');
+  const enBtn = document.getElementById('lang-en');
+  if(esBtn){ esBtn.style.background = lang==='es'?'rgba(255,255,255,.2)':'transparent'; esBtn.style.opacity = lang==='es'?'1':'.5'; }
+  if(enBtn){ enBtn.style.background = lang==='en'?'rgba(255,255,255,.2)':'transparent'; enBtn.style.opacity = lang==='en'?'1':'.5'; }
+  // Top bar lang button
+  const tbLang = document.getElementById('tb-lang-btn');
+  if(tbLang) tbLang.textContent = '🌐 ' + lang.toUpperCase();
+}
+
+function toggleLang(){
+  setLang(CURRENT_LANG === 'es' ? 'en' : 'es');
+}
+
+function T(key){ return LANGS[CURRENT_LANG][key] || key; }
+
+// ══════════════ AUTH SCREENS ══════════════
+function switchTab(tab){
+  const isLogin = tab === 'login';
+  document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('tab-login').style.background = isLogin ? 'var(--dk)' : 'transparent';
+  document.getElementById('tab-login').style.color = isLogin ? 'var(--white)' : 'var(--g500)';
+  document.getElementById('tab-login').style.fontWeight = isLogin ? '700' : '400';
+  document.getElementById('tab-register').style.background = isLogin ? 'transparent' : 'var(--dk)';
+  document.getElementById('tab-register').style.color = isLogin ? 'var(--g500)' : 'var(--white)';
+  document.getElementById('tab-register').style.fontWeight = isLogin ? '400' : '700';
+}
+
+function showLoginScreen(){
+  document.getElementById('auth-screen').style.display = 'block';
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('forgot-screen').style.display = 'none';
+  switchTab('login');
+}
+
+function showForgotPwd(){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('forgot-screen').style.display = 'block';
+}
+
+function doForgotPwd(){
+  const email = document.getElementById('forgot-email').value.trim();
+  const msg = document.getElementById('forgot-msg');
+  if(!email){ msg.style.display='block'; msg.textContent='⚠ Ingresa tu email.'; return; }
+  const user = getUserByEmail(email);
+  msg.style.display='block';
+  msg.style.color='var(--green)';
+  msg.style.background='var(--green-l)';
+  msg.style.border='1px solid #9ae6b4';
+  // In production this would send an email via Supabase Auth
+  msg.textContent = CURRENT_LANG==='en'
+    ? '✓ If this email exists, you will receive instructions shortly.'
+    : '✓ Si el email existe, recibirás las instrucciones en breve.';
+}
+
+// ══════════════ REGISTRATION ══════════════
+let PENDING_USER = null;
+let SELECTED_PLAN = 'trial';
+
+// Stripe Payment Links (replace with real links from your Stripe dashboard)
+const STRIPE_LINKS = {
+  solo:   'https://buy.stripe.com/SOLO_PLAN_LINK',   // TODO: Replace
+  clinic: 'https://buy.stripe.com/CLINIC_PLAN_LINK', // TODO: Replace
+};
+
+function doRegister(){
+  const name = document.getElementById('reg-name').value.trim();
+  const initials = document.getElementById('reg-initials').value.trim().toUpperCase();
+  const email = document.getElementById('reg-email').value.trim();
+  const clinic = document.getElementById('reg-clinic').value.trim();
+  const country = document.getElementById('reg-country').value;
+  const spec = document.getElementById('reg-spec').value;
+  const pwd = document.getElementById('reg-pwd').value;
+  const errDiv = document.getElementById('reg-err');
+  const btn = document.getElementById('reg-btn');
+
+  errDiv.style.display = 'none';
+  if(!name||!email||!clinic||!pwd){ errDiv.style.display='block'; errDiv.textContent='⚠ '+( CURRENT_LANG==='en'?'Complete all fields.':'Completa todos los campos.'); return; }
+  if(pwd.length < 8){ errDiv.style.display='block'; errDiv.textContent='⚠ '+(CURRENT_LANG==='en'?'Password must be at least 8 characters.':'La contraseña debe tener al menos 8 caracteres.'); return; }
+  if(getUserByEmail(email)){ errDiv.style.display='block'; errDiv.textContent='⚠ '+(CURRENT_LANG==='en'?'This email is already registered.':'Este email ya está registrado.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = CURRENT_LANG==='en'?'Creating account…':'Creando cuenta…';
+
+  // Create new org and user
+  const orgId = 'org_'+genId();
+  const userId = 'usr_'+genId();
+  saveOrg({id:orgId, name:clinic, country, createdAt:today(), plan:'trial', trialEnds:addDays(today(),30)});
+  const newUser = {id:userId, org_id:orgId, email, name, initials:initials||name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(), spec, clinic, role:'doctor', pwd:hashPwd(pwd), createdAt:today(), active:true, lang:CURRENT_LANG};
+  saveUser(newUser);
+
+  // Seed default catalogs for new user
+  const defaultDiags = CURRENT_LANG==='en'
+    ? ['Wet AMD','Dry AMD','Diabetic Macular Edema','Retinal Vein Occlusion','Choroidal Neovascularization','Epiretinal Membrane','Macular Hole','Retinal Detachment','Endophthalmitis','Uveitis','Diabetic Retinopathy']
+    : ['DMRE Húmeda','DMRE Seca','Edema Macular Diabético','Oclusión Venosa Retiniana','Neovascularización Coroidea','Membrana Epirretiniana','Agujero Macular','Desprendimiento de Retina','Endoftalmitis','Uveítis','Retinopatía Diabética'];
+  const da = sGet('rc_diags')||[];
+  defaultDiags.forEach(n=>da.push({id:genId(),name:n,did:userId,org_id:orgId,createdAt:today()}));
+  sSet('rc_diags',da);
+
+  PENDING_USER = newUser;
+  btn.disabled = false;
+  btn.textContent = T('btn_register');
+
+  // Show onboarding
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'block';
+  document.getElementById('ob-name').value = name;
+  document.getElementById('ob-spec').value = spec;
+  document.getElementById('ob-clinic').value = clinic;
+}
+
+function obNext(step){
+  if(step===1){
+    // Save updated profile
+    if(PENDING_USER){
+      PENDING_USER.name = document.getElementById('ob-name').value.trim() || PENDING_USER.name;
+      PENDING_USER.spec = document.getElementById('ob-spec').value.trim() || PENDING_USER.spec;
+      PENDING_USER.clinic = document.getElementById('ob-clinic').value.trim() || PENDING_USER.clinic;
+      saveUser(PENDING_USER);
+    }
+    document.getElementById('ob-step-1').style.display = 'none';
+    document.getElementById('ob-step-2').style.display = 'block';
+    document.getElementById('ob-step-label').textContent = CURRENT_LANG==='en'?'Step 2 of 2':'Paso 2 de 2';
+    document.getElementById('ob-dot-1').style.background = 'var(--teal)';
+    document.getElementById('ob-dot-2').style.background = 'var(--teal)';
+  }
+}
+
+function selectPlan(plan){
+  SELECTED_PLAN = plan;
+  ['trial','solo','clinic'].forEach(p=>{
+    const el = document.getElementById('plan-'+p);
+    if(el){ el.style.border = p===plan ? '2px solid var(--teal)' : '1.5px solid var(--g200)'; el.style.background = p===plan ? 'var(--teal-bg)' : 'transparent'; }
+  });
+  const btn = document.getElementById('ob-finish-btn');
+  if(plan==='trial') btn.textContent = T('btn_start_trial');
+  else if(plan==='solo') btn.textContent = CURRENT_LANG==='en'?'Subscribe to Solo →':'Suscribirse a Solo →';
+  else btn.textContent = CURRENT_LANG==='en'?'Subscribe to Clinic →':'Suscribirse a Clínica →';
+}
+
+function obFinish(){
+  if(!PENDING_USER) return;
+  setSession(PENDING_USER);
+  if(SELECTED_PLAN === 'trial'){
+    document.getElementById('login-overlay').style.display = 'none';
+    showApp();
+    toast('🎉 '+(CURRENT_LANG==='en'?'Welcome! Your 30-day free trial has started.':'¡Bienvenido! Tu prueba gratuita de 30 días comenzó.'), 'success');
+  } else {
+    // Redirect to Stripe Payment Link
+    const link = STRIPE_LINKS[SELECTED_PLAN];
+    if(link.includes('TODO')){ toast('💳 '+(CURRENT_LANG==='en'?'Stripe payment link not configured yet.':'Link de pago Stripe no configurado aún.'),'info'); return; }
+    window.open(link + '?client_reference_id='+PENDING_USER.id+'&prefilled_email='+encodeURIComponent(PENDING_USER.email), '_blank');
+    // Still let them in during the redirect
+    document.getElementById('login-overlay').style.display = 'none';
+    showApp();
+  }
+  PENDING_USER = null;
+}
+
+function boot(){
+  seedIfNeeded();
+  setLang(CURRENT_LANG);
+  if(loadSession()){
+    showApp();
+  } else {
+    document.getElementById('login-overlay').style.display='flex';
+    switchTab('login');
+  }
+}
 boot();
 </script>
 </body>
